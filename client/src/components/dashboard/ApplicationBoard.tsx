@@ -13,9 +13,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ApplicationColumn, type ColumnConfig } from "./ApplicationColumn"
-import type { Application, ApplicationStatus } from "./types"
+import type { Application, ApplicationStatus, WorkType } from "./types"
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+// ─── Column config ────────────────────────────────────────────────────────────
 
 const STATUS_ORDER: ApplicationStatus[] = [
   "applied",
@@ -58,111 +58,297 @@ const COLUMNS: ColumnConfig[] = [
   },
 ]
 
+// ─── Seed data ────────────────────────────────────────────────────────────────
+
 const SEED: Application[] = [
   {
     id: "1",
     company: "Stripe",
     role: "Backend Engineer Intern",
     status: "applied",
-    resumeVersion: "v2.1",
+    url: "https://stripe.com/jobs",
+    dateApplied: "2024-09-13",
     lastActivity: "2d ago",
     statusTag: "Follow-up due",
     note: "Referral from CS3511 TA",
+    workType: "hybrid",
+    salary: 65,
   },
   {
     id: "2",
     company: "Vercel",
     role: "Platform Engineering Intern",
     status: "applied",
-    resumeVersion: "v2.1",
+    url: "https://vercel.com/careers",
+    dateApplied: "2024-09-10",
     lastActivity: "5d ago",
+    workType: "remote",
+    salary: 60,
   },
   {
     id: "3",
     company: "Ramp",
     role: "Software Engineer Intern",
     status: "applied",
-    resumeVersion: "v2.0",
+    url: "https://ramp.com/careers",
+    dateApplied: "2024-09-08",
     lastActivity: "1w ago",
+    workType: "in-person",
+    referenceNumber: "REQ-4821",
   },
   {
     id: "4",
     company: "GitHub",
     role: "SWE Intern · Fall 2025",
     status: "applied",
-    resumeVersion: "v2.1",
+    url: "https://github.com/about/careers",
+    dateApplied: "2024-09-12",
     lastActivity: "3d ago",
     statusTag: "Follow-up due",
+    workType: "remote",
+    salary: 70,
   },
   {
     id: "5",
     company: "Linear",
     role: "Frontend Engineer",
     status: "screening",
-    resumeVersion: "v3.0",
+    url: "https://linear.app/careers",
+    dateApplied: "2024-09-05",
     lastActivity: "Yesterday",
     statusTag: "Phone call Thu 3pm",
+    workType: "remote",
+    salary: 95,
   },
   {
     id: "6",
     company: "Notion",
     role: "Full Stack Intern",
     status: "screening",
-    resumeVersion: "v3.0",
+    url: "https://notion.com/careers",
+    dateApplied: "2024-09-03",
     lastActivity: "2d ago",
     note: "Applied through campus recruiting",
+    workType: "hybrid",
   },
   {
     id: "7",
     company: "Anthropic",
     role: "AI Safety Engineer",
     status: "interview",
-    resumeVersion: "v3.2",
+    url: "https://anthropic.com/careers",
+    dateApplied: "2024-08-28",
     lastActivity: "Today",
     statusTag: "Technical · Mon 2pm",
     note: "Prep: systems design + ML fundamentals",
+    workType: "hybrid",
+    salary: 120,
+    referenceNumber: "ANT-2024-SWE",
   },
   {
     id: "8",
     company: "Scale AI",
     role: "Software Engineer",
     status: "interview",
-    resumeVersion: "v3.2",
+    url: "https://scale.com/careers",
+    dateApplied: "2024-08-30",
     lastActivity: "Today",
     statusTag: "HR screen done",
+    workType: "in-person",
+    salary: 110,
   },
   {
     id: "9",
     company: "Meta",
     role: "Software Engineer",
     status: "rejected",
-    resumeVersion: "v1.0",
+    url: "https://metacareers.com",
+    dateApplied: "2024-08-10",
     lastActivity: "3w ago",
+    workType: "hybrid",
   },
   {
     id: "10",
     company: "Google",
     role: "SWE L3 — New Grad",
     status: "rejected",
-    resumeVersion: "v2.0",
+    url: "https://careers.google.com",
+    dateApplied: "2024-08-05",
     lastActivity: "2w ago",
     note: "No feedback provided",
+    workType: "hybrid",
+    salary: 130,
   },
 ]
 
-// ─── Select styles (matches Input appearance) ─────────────────────────────────
+// ─── Form helpers ─────────────────────────────────────────────────────────────
 
 const selectCls =
   "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
 
-// ─── Form helpers ─────────────────────────────────────────────────────────────
+function today() {
+  return new Date().toISOString().split("T")[0]
+}
 
 const EMPTY_FORM = {
   company: "",
+  referenceNumber: "",
   role: "",
+  workType: "" as WorkType | "",
+  salary: "",
+  url: "",
+  dateApplied: today(),
   status: "applied" as ApplicationStatus,
-  resumeVersion: "v3.2",
-  note: "",
+}
+
+type FormState = typeof EMPTY_FORM
+
+// ─── Reusable form fields ─────────────────────────────────────────────────────
+
+function ApplicationForm({
+  form,
+  onChange,
+}: {
+  form: FormState
+  onChange: (patch: Partial<FormState>) => void
+}) {
+  return (
+    <div className="space-y-4 py-1">
+      {/* Company + Reference # */}
+      <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+        <div className="space-y-1.5">
+          <Label htmlFor="f-company">
+            Company <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="f-company"
+            placeholder="Stripe"
+            value={form.company}
+            onChange={(e) => onChange({ company: e.target.value })}
+            autoFocus
+          />
+        </div>
+        <div className="space-y-1.5 w-36">
+          <Label htmlFor="f-ref" className="text-muted-foreground">
+            Reference #
+          </Label>
+          <Input
+            id="f-ref"
+            placeholder="REQ-1234"
+            value={form.referenceNumber}
+            onChange={(e) => onChange({ referenceNumber: e.target.value })}
+          />
+        </div>
+      </div>
+
+      {/* Job title */}
+      <div className="space-y-1.5">
+        <Label htmlFor="f-role">
+          Job title <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="f-role"
+          placeholder="Software Engineer Intern"
+          value={form.role}
+          onChange={(e) => onChange({ role: e.target.value })}
+        />
+      </div>
+
+      {/* Work type + Salary */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="f-worktype" className="text-muted-foreground">
+            Work type
+          </Label>
+          <select
+            id="f-worktype"
+            className={selectCls}
+            value={form.workType}
+            onChange={(e) => onChange({ workType: e.target.value as WorkType | "" })}
+          >
+            <option value="">Not specified</option>
+            <option value="in-person">In-person</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="remote">Remote</option>
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="f-salary" className="text-muted-foreground">
+            Salary (k)
+          </Label>
+          <div className="relative">
+            <Input
+              id="f-salary"
+              type="number"
+              placeholder="95"
+              min={0}
+              value={form.salary}
+              onChange={(e) => onChange({ salary: e.target.value })}
+              className="pr-6"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+              k
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* URL */}
+      <div className="space-y-1.5">
+        <Label htmlFor="f-url">
+          URL <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="f-url"
+          type="url"
+          placeholder="https://company.com/jobs/..."
+          value={form.url}
+          onChange={(e) => onChange({ url: e.target.value })}
+        />
+      </div>
+
+      {/* Date applied + Status */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="f-date">
+            Date applied <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="f-date"
+            type="date"
+            value={form.dateApplied}
+            onChange={(e) => onChange({ dateApplied: e.target.value })}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="f-status">
+            Status <span className="text-destructive">*</span>
+          </Label>
+          <select
+            id="f-status"
+            className={selectCls}
+            value={form.status}
+            onChange={(e) => onChange({ status: e.target.value as ApplicationStatus })}
+          >
+            {STATUS_ORDER.map((s) => (
+              <option key={s} value={s}>
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function isFormValid(form: FormState) {
+  return (
+    form.company.trim() !== "" &&
+    form.role.trim() !== "" &&
+    form.url.trim() !== "" &&
+    form.dateApplied !== ""
+  )
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -181,30 +367,31 @@ export function ApplicationBoard({
   onColumnAddClick,
 }: Props) {
   const [applications, setApplications] = useState<Application[]>(SEED)
-  const [addForm, setAddForm] = useState(EMPTY_FORM)
+  const [addForm, setAddForm] = useState<FormState>(EMPTY_FORM)
 
-  // Edit dialog state
   const [editOpen, setEditOpen] = useState(false)
   const [editingApp, setEditingApp] = useState<Application | null>(null)
-  const [editForm, setEditForm] = useState(EMPTY_FORM)
+  const [editForm, setEditForm] = useState<FormState>(EMPTY_FORM)
 
-  // Reset add form when dialog opens with (potentially new) default status
   useEffect(() => {
     if (addOpen) {
-      setAddForm({ ...EMPTY_FORM, status: addDefaultStatus })
+      setAddForm({ ...EMPTY_FORM, status: addDefaultStatus, dateApplied: today() })
     }
   }, [addOpen, addDefaultStatus])
 
   function handleAdd() {
-    if (!addForm.company.trim() || !addForm.role.trim()) return
+    if (!isFormValid(addForm)) return
     const next: Application = {
       id: Date.now().toString(),
       company: addForm.company.trim(),
+      referenceNumber: addForm.referenceNumber.trim() || undefined,
       role: addForm.role.trim(),
+      workType: (addForm.workType as WorkType) || undefined,
+      salary: addForm.salary ? Number(addForm.salary) : undefined,
+      url: addForm.url.trim(),
+      dateApplied: addForm.dateApplied,
       status: addForm.status,
-      resumeVersion: addForm.resumeVersion.trim() || "v3.2",
       lastActivity: "Just now",
-      note: addForm.note.trim() || undefined,
     }
     setApplications((prev) => [...prev, next])
     onAddOpenChange(false)
@@ -214,26 +401,32 @@ export function ApplicationBoard({
     setEditingApp(app)
     setEditForm({
       company: app.company,
+      referenceNumber: app.referenceNumber ?? "",
       role: app.role,
+      workType: app.workType ?? "",
+      salary: app.salary?.toString() ?? "",
+      url: app.url,
+      dateApplied: app.dateApplied,
       status: app.status,
-      resumeVersion: app.resumeVersion,
-      note: app.note ?? "",
     })
     setEditOpen(true)
   }
 
   function handleSaveEdit() {
-    if (!editingApp || !editForm.company.trim() || !editForm.role.trim()) return
+    if (!editingApp || !isFormValid(editForm)) return
     setApplications((prev) =>
       prev.map((a) =>
         a.id === editingApp.id
           ? {
               ...a,
               company: editForm.company.trim(),
+              referenceNumber: editForm.referenceNumber.trim() || undefined,
               role: editForm.role.trim(),
+              workType: (editForm.workType as WorkType) || undefined,
+              salary: editForm.salary ? Number(editForm.salary) : undefined,
+              url: editForm.url.trim(),
+              dateApplied: editForm.dateApplied,
               status: editForm.status,
-              resumeVersion: editForm.resumeVersion.trim() || a.resumeVersion,
-              note: editForm.note.trim() || undefined,
               lastActivity: "Just now",
             }
           : a
@@ -258,7 +451,6 @@ export function ApplicationBoard({
     setApplications((prev) => prev.filter((a) => a.id !== id))
   }
 
-  // Status bar counts
   const followUps = applications.filter((a) =>
     a.statusTag?.toLowerCase().includes("follow")
   ).length
@@ -301,87 +493,27 @@ export function ApplicationBoard({
         <span className="text-xs text-muted-foreground/50">Last synced: just now</span>
       </div>
 
-      {/* ── Add Application Dialog ── */}
+      {/* ── Add Dialog ── */}
       <Dialog open={addOpen} onOpenChange={onAddOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Add application</DialogTitle>
-            <DialogDescription>Track a new role in your job search.</DialogDescription>
+            <DialogDescription>
+              Track a new role.{" "}
+              <span className="text-destructive">*</span> Required.
+            </DialogDescription>
           </DialogHeader>
-
-          <div className="space-y-4 py-1">
-            <div className="space-y-1.5">
-              <Label htmlFor="add-company">Company</Label>
-              <Input
-                id="add-company"
-                placeholder="Stripe"
-                value={addForm.company}
-                onChange={(e) => setAddForm((f) => ({ ...f, company: e.target.value }))}
-                autoFocus
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="add-role">Role</Label>
-              <Input
-                id="add-role"
-                placeholder="Software Engineer Intern"
-                value={addForm.role}
-                onChange={(e) => setAddForm((f) => ({ ...f, role: e.target.value }))}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="add-status">Status</Label>
-                <select
-                  id="add-status"
-                  className={selectCls}
-                  value={addForm.status}
-                  onChange={(e) =>
-                    setAddForm((f) => ({ ...f, status: e.target.value as ApplicationStatus }))
-                  }
-                >
-                  {STATUS_ORDER.map((s) => (
-                    <option key={s} value={s}>
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="add-resume">Resume version</Label>
-                <Input
-                  id="add-resume"
-                  placeholder="v3.2"
-                  value={addForm.resumeVersion}
-                  onChange={(e) => setAddForm((f) => ({ ...f, resumeVersion: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="add-note">
-                Note{" "}
-                <span className="text-muted-foreground font-normal">(optional)</span>
-              </Label>
-              <Input
-                id="add-note"
-                placeholder="Referral from…"
-                value={addForm.note}
-                onChange={(e) => setAddForm((f) => ({ ...f, note: e.target.value }))}
-              />
-            </div>
-          </div>
-
+          <ApplicationForm
+            form={addForm}
+            onChange={(patch) => setAddForm((f) => ({ ...f, ...patch }))}
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => onAddOpenChange(false)}>
               Cancel
             </Button>
             <Button
               onClick={handleAdd}
-              disabled={!addForm.company.trim() || !addForm.role.trim()}
+              disabled={!isFormValid(addForm)}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               Add application
@@ -390,84 +522,27 @@ export function ApplicationBoard({
         </DialogContent>
       </Dialog>
 
-      {/* ── Edit Application Dialog ── */}
+      {/* ── Edit Dialog ── */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit application</DialogTitle>
-            <DialogDescription>Update the details for this role.</DialogDescription>
+            <DialogDescription>
+              Update the details for this role.{" "}
+              <span className="text-destructive">*</span> Required.
+            </DialogDescription>
           </DialogHeader>
-
-          <div className="space-y-4 py-1">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-company">Company</Label>
-              <Input
-                id="edit-company"
-                value={editForm.company}
-                onChange={(e) => setEditForm((f) => ({ ...f, company: e.target.value }))}
-                autoFocus
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-role">Role</Label>
-              <Input
-                id="edit-role"
-                value={editForm.role}
-                onChange={(e) => setEditForm((f) => ({ ...f, role: e.target.value }))}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-status">Status</Label>
-                <select
-                  id="edit-status"
-                  className={selectCls}
-                  value={editForm.status}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, status: e.target.value as ApplicationStatus }))
-                  }
-                >
-                  {STATUS_ORDER.map((s) => (
-                    <option key={s} value={s}>
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-resume">Resume version</Label>
-                <Input
-                  id="edit-resume"
-                  value={editForm.resumeVersion}
-                  onChange={(e) => setEditForm((f) => ({ ...f, resumeVersion: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-note">
-                Note{" "}
-                <span className="text-muted-foreground font-normal">(optional)</span>
-              </Label>
-              <Input
-                id="edit-note"
-                placeholder="Add a note…"
-                value={editForm.note}
-                onChange={(e) => setEditForm((f) => ({ ...f, note: e.target.value }))}
-              />
-            </div>
-          </div>
-
+          <ApplicationForm
+            form={editForm}
+            onChange={(patch) => setEditForm((f) => ({ ...f, ...patch }))}
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>
               Cancel
             </Button>
             <Button
               onClick={handleSaveEdit}
-              disabled={!editForm.company.trim() || !editForm.role.trim()}
+              disabled={!isFormValid(editForm)}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               Save changes

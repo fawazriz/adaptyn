@@ -5,12 +5,18 @@ export type ApplicationStatus =
   | "offer"
   | "rejected"
 
+export type WorkType = "in-person" | "hybrid" | "remote"
+
 export interface Application {
   id: string
   company: string
+  referenceNumber?: string
   role: string
+  workType?: WorkType
+  salary?: number
+  url: string
+  dateApplied: string
   status: ApplicationStatus
-  resumeVersion: string
   lastActivity: string
   statusTag?: string
   note?: string

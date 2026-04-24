@@ -110,18 +110,36 @@ export function ApplicationCard({ app, onMoveNext, onEdit, onArchive }: Props) {
       </div>
 
       {/* Tags row */}
-      <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-        <span className="text-[10px] font-mono bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border/60">
-          {app.resumeVersion}
-        </span>
-        {app.statusTag && (
-          <span
-            className={`text-[10px] px-1.5 py-0.5 rounded border ${tagClasses(app.statusTag)}`}
-          >
-            {app.statusTag}
-          </span>
-        )}
-      </div>
+      {(app.workType || app.salary != null || app.statusTag || app.referenceNumber) && (
+        <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+          {app.referenceNumber && (
+            <span className="text-[10px] font-mono bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border/60">
+              {app.referenceNumber}
+            </span>
+          )}
+          {app.workType && (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+              app.workType === "remote"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                : app.workType === "hybrid"
+                ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20"
+                : "bg-muted text-muted-foreground border-border"
+            }`}>
+              {app.workType === "in-person" ? "In-person" : app.workType.charAt(0).toUpperCase() + app.workType.slice(1)}
+            </span>
+          )}
+          {app.salary != null && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded border bg-muted text-muted-foreground border-border">
+              ${app.salary}k
+            </span>
+          )}
+          {app.statusTag && (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded border ${tagClasses(app.statusTag)}`}>
+              {app.statusTag}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Note */}
       {app.note && (
@@ -131,7 +149,8 @@ export function ApplicationCard({ app, onMoveNext, onEdit, onArchive }: Props) {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-end mt-2 pt-2 border-t border-border/50">
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+        <span className="text-[10px] text-muted-foreground/60">{app.dateApplied}</span>
         <span className="text-[10px] text-muted-foreground/60">{app.lastActivity}</span>
       </div>
     </div>
