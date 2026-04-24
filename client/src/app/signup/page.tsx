@@ -6,11 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Navbar } from "@/components/shared/Navbar"
-import {
-  IconArrowRight,
-  IconBrandGoogle,
-  IconCheck,
-} from "@tabler/icons-react"
+import { IconArrowRight, IconBrandGoogle, IconCheck } from "@tabler/icons-react"
 
 const FEATURES = [
   "Kanban board for every application",
@@ -19,7 +15,7 @@ const FEATURES = [
   "AI-powered recruiter finder",
 ]
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [loading, setLoading] = useState(false)
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -30,22 +26,19 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      
       <Navbar />
+
       {/* Page body */}
       <div className="flex-1 grid lg:grid-cols-2">
 
         {/* Left — branding panel */}
-        <div className="hidden lg:flex flex-col justify-between p-12 border-r border-border bg-muted/20">
+        <div className="hidden lg:flex flex-col justify-between p-12 border-r border-border bg-muted/20 mt-7">
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-5">
-              Your job search, organized
-            </p>
             <h2 className="text-2xl font-semibold text-foreground leading-snug mb-3">
-              Pick up where you left off.
+              Stop juggling spreadsheets and PDF files.
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Every application, every resume version, every recruiter contact — exactly as you left them.
+              Adaptyn gives CS students and new grads one place for everything in their job search — from first application to signed offer.
             </p>
           </div>
 
@@ -69,26 +62,46 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Right — login form */}
+        {/* Right — signup form */}
         <div className="flex items-center justify-center p-8">
           <div className="w-full max-w-sm">
 
             {/* Heading */}
             <div className="mb-8">
-              <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome back.</h1>
+              <h1 className="text-2xl font-semibold text-foreground mb-2">Create your account.</h1>
               <p className="text-sm text-muted-foreground">
-                No account?{" "}
-                <a
-                  href="/signup"
-                  className="text-primary underline-offset-4 hover:underline"
-                >
-                  Sign up free →
+                Already have one?{" "}
+                <a href="/login" className="text-primary underline-offset-4 hover:underline">
+                  Log in →
                 </a>
               </p>
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="first-name">First name</Label>
+                  <Input
+                    id="first-name"
+                    type="text"
+                    placeholder="Alex"
+                    autoComplete="given-name"
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="last-name">Last name</Label>
+                  <Input
+                    id="last-name"
+                    type="text"
+                    placeholder="Johnson"
+                    autoComplete="family-name"
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -101,19 +114,22 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
-                  >
-                    Forgot password?
-                  </a>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
-                  autoComplete="current-password"
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="confirm-password">Confirm password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  autoComplete="new-password"
                   required
                 />
               </div>
@@ -123,7 +139,7 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                {loading ? "Signing in…" : "Sign in"}
+                {loading ? "Creating account…" : "Create account"}
                 {!loading && <IconArrowRight size={14} />}
               </Button>
             </form>
@@ -144,7 +160,7 @@ export default function LoginPage() {
 
             {/* Footer note */}
             <p className="mt-6 text-center text-xs text-muted-foreground/60">
-              By signing in you agree to our{" "}
+              By signing up you agree to our{" "}
               <a href="#" className="underline underline-offset-4 hover:text-muted-foreground">
                 Terms
               </a>{" "}

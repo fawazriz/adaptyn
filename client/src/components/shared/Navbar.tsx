@@ -27,6 +27,7 @@ import {
   IconUsersGroup,
   IconMenu2,
   IconArrowRight,
+  IconHome,
 } from "@tabler/icons-react"
 
 
@@ -77,11 +78,21 @@ export function Navbar() {
           : "bg-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between gap-4">
+      <div className={`h-14 flex items-center justify-between gap-4 px-5 ${!isAuthPage ? "max-w-6xl mx-auto" : ""}`}>
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2 shrink-0">
-          <span className="font-semibold text-foreground tracking-tight text-sm">Adaptyn</span>
-        </a>
+        {isAuthPage ? (
+          <a
+            href="/"
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            aria-label="Back to home"
+          >
+            <IconHome size={16} />
+          </a>
+        ) : (
+          <a href="/" className="flex items-center gap-2 shrink-0">
+            <span className="font-semibold text-foreground tracking-tight text-sm">Adaptyn</span>
+          </a>
+        )}
 
         {/* Desktop nav */}
         {!isAuthPage && (
@@ -149,13 +160,15 @@ export function Navbar() {
                 <a href="/login">Log in</a>
               </Button>
 
-              <Button
-                size="sm"
-                className="hidden md:flex gap-1.5 h-8 text-sm bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                Sign Up Now
-                <IconArrowRight size={13} />
-              </Button>
+              <a href="/signup">
+                <Button
+                  size="sm"
+                  className="hidden md:flex gap-1.5 h-8 text-sm bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
+                >
+                  Sign up
+                  <IconArrowRight size={13} />
+                </Button>
+              </a>
 
               {/* Mobile hamburger */}
               <Sheet>
