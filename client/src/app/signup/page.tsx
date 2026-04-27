@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,12 +17,53 @@ const FEATURES = [
 ]
 
 export default function SignupPage() {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
+    setError(null)
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      setLoading(false)
+      return
+    }
+
     // auth logic goes here
+    try {
+      const response = await fetch("http://localhost:3001/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: `${firstName} ${lastName}`,
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create account");
+      }
+
+      // Go somewhere after signup
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError("Failed to create account");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -38,7 +80,7 @@ export default function SignupPage() {
               Stop juggling spreadsheets and PDF files.
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Adaptyn gives CS students and new grads one place for everything in their job search — from first application to signed offer.
+              Adaptyn gives CS students and new grads one place for everything in their job search - from first application to signed offer.
             </p>
           </div>
 
@@ -79,6 +121,7 @@ export default function SignupPage() {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && <p className="text-red-500 text-sm">{error}</p>}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="first-name">First name</Label>
@@ -87,6 +130,8 @@ export default function SignupPage() {
                     type="text"
                     placeholder="Alex"
                     autoComplete="given-name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
                     required
                   />
                 </div>
@@ -97,6 +142,8 @@ export default function SignupPage() {
                     type="text"
                     placeholder="Johnson"
                     autoComplete="family-name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                     required
                   />
                 </div>
@@ -109,6 +156,8 @@ export default function SignupPage() {
                   type="email"
                   placeholder="you@gmail.com"
                   autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -120,6 +169,8 @@ export default function SignupPage() {
                   type="password"
                   placeholder="At least 8 characters"
                   autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
@@ -130,6 +181,8 @@ export default function SignupPage() {
                   id="confirm-password"
                   type="password"
                   autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                 />
               </div>
@@ -151,12 +204,6 @@ export default function SignupPage() {
                 or
               </span>
             </div>
-
-            {/* OAuth */}
-            <Button variant="outline" className="w-full gap-2">
-              <IconBrandGoogle size={15} />
-              Continue with Google
-            </Button>
 
             {/* Footer note */}
             <p className="mt-6 text-center text-xs text-muted-foreground/60">

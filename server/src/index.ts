@@ -12,6 +12,8 @@ const PORT = process.env.PORT || 3001
 
 app.use(morgan('dev'))
 app.use(express.json())
+app.use(cors());
+
 app.use('/api/auth', authRouter)
 
 app.get('/', (req, res) => {
