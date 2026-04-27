@@ -11,6 +11,7 @@ import {
   IconBrandGoogle,
   IconCheck,
 } from "@tabler/icons-react"
+import { useRouter } from "next/navigation"
 
 const FEATURES = [
   "Kanban board for every application",
@@ -20,12 +21,44 @@ const FEATURES = [
 ]
 
 export default function LoginPage() {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
+    setError(null)
+
     // auth logic goes here
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create account");
+      }
+
+      // Go somewhere after signup
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError("Failed to create account");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -45,7 +78,7 @@ export default function LoginPage() {
               Pick up where you left off.
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Every application, every resume version, every recruiter contact — exactly as you left them.
+              Every application, every resume version, every recruiter contact - exactly as you left them.
             </p>
           </div>
 
@@ -96,6 +129,8 @@ export default function LoginPage() {
                   type="email"
                   placeholder="you@gmail.com"
                   autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -114,6 +149,8 @@ export default function LoginPage() {
                   id="password"
                   type="password"
                   autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
