@@ -4,6 +4,8 @@ import morgan from 'morgan'
 import dotenv from 'dotenv'
 import supabase from './db/supabase-client'
 import authRouter from './routes/auth'
+import { requireAuth } from './middleware/auth'
+import applicationRouter from './routes/applications'
 
 dotenv.config()
 
@@ -15,6 +17,7 @@ app.use(express.json())
 app.use(cors());
 
 app.use('/api/auth', authRouter)
+app.use('/api/applications', requireAuth, applicationRouter)
 
 app.get('/', (req, res) => {
   res.send('Hello, world!')
