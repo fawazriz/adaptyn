@@ -2,6 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 import dotenv from 'dotenv'
+import supabase from './db/supabase-client'
+import authRouter from './routes/auth'
 
 dotenv.config()
 
@@ -10,9 +12,10 @@ const PORT = process.env.PORT || 3001
 
 app.use(morgan('dev'))
 app.use(express.json())
+app.use('/api/auth', authRouter)
 
 app.get('/', (req, res) => {
-  res.json({ status: 'ok' })
+  res.send('Hello, world!')
 })
 
 app.listen(PORT, () => {
