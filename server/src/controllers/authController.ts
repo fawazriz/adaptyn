@@ -32,13 +32,15 @@ export async function login(
 ) {
     const { email, password } = req.body;
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
+    if (error || !data.session) {
         // 401 Unauthorized for failed login
-        return res.status(401).json({ error: error.message });
+        return res.status(401).json({ error: error?.message ?? "Login failed" });
     }
 
     // 200 OK for successful login
-    res.status(200).json({ message: "User logged in successfully" });
+    res.status(200).json({
+        accessToken: data.session.access_token,
+    });
 }

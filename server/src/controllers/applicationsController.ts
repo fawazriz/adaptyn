@@ -1,8 +1,16 @@
 import { Request, Response } from "express";
 import supabase from "../db/supabase-client";
+import type { User } from "@supabase/supabase-js";
+
+interface AuthenticatedRequest extends Request {
+    user: User;
+}
 
 export async function getAllApplications(req: Request, res: Response) {
-    const { data, error } = await supabase.from("applications").select("*");
+    const { data, error } = await supabase
+  .from("applications")
+  .select("*")
+  .eq("user_id", (req as AuthenticatedRequest).user.id);
 
     if (error) {
         return res.status(500).json({ error: error.message });

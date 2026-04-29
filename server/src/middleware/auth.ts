@@ -7,8 +7,9 @@ interface AuthenticatedRequest extends Request {
 }
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const authHeader : string | undefined = req.headers.authorization;
-  const token = authHeader?.replace("Bearer ", "");
+  // const authHeader : string | undefined = req.headers.authorization;
+  // const token = authHeader?.replace("Bearer ", "");
+  const token = req.cookies.accessToken;
 
   if (!token) {
     return res.status(401).json({ error: "Missing token" });

@@ -60,6 +60,24 @@ const COLUMNS: ColumnConfig[] = [
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
+export async function fetchApplications(): Promise<Application[]> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/applications`,
+    {
+      method: "GET",
+      credentials: "include", // sends cookies automatically
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch applications");
+  }
+
+  const data = await res.json();
+  return data;
+}
+
+/*
 const SEED: Application[] = [
   {
     id: "1",
@@ -180,7 +198,7 @@ const SEED: Application[] = [
     salary: 130,
   },
 ]
-
+*/
 // ─── Form helpers ─────────────────────────────────────────────────────────────
 
 const selectCls =
@@ -366,12 +384,16 @@ export function ApplicationBoard({
   onAddOpenChange,
   onColumnAddClick,
 }: Props) {
-  const [applications, setApplications] = useState<Application[]>(SEED)
+  const [applications, setApplications] = useState<Application[]>([])
   const [addForm, setAddForm] = useState<FormState>(EMPTY_FORM)
 
   const [editOpen, setEditOpen] = useState(false)
   const [editingApp, setEditingApp] = useState<Application | null>(null)
   const [editForm, setEditForm] = useState<FormState>(EMPTY_FORM)
+
+  useEffect(() => {
+    fetchApplications().then(setApplications).catch(console.error)
+  }, [])
 
   useEffect(() => {
     if (addOpen) {
