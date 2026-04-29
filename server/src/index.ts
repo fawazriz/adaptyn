@@ -16,7 +16,12 @@ const PORT = process.env.PORT || 3005
 app.use(morgan('dev'))
 app.use(express.json())
 app.use(cookieParser())
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONT_END_URL, // EXACT frontend URL
+    credentials: true,               // REQUIRED for cookies
+  })
+);
 
 app.use('/api/auth', authRouter)
 app.use('/api/applications', requireAuth, applicationRouter)
