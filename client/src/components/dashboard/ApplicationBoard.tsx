@@ -313,9 +313,7 @@ function ApplicationForm({
 
       {/* URL */}
       <div className="space-y-1.5">
-        <Label htmlFor="f-url">
-          URL <span className="text-destructive">*</span>
-        </Label>
+        <Label htmlFor="f-url">URL</Label>
         <Input
           id="f-url"
           type="url"
@@ -364,7 +362,6 @@ function isFormValid(form: FormState) {
   return (
     form.company.trim() !== "" &&
     form.role.trim() !== "" &&
-    form.url.trim() !== "" &&
     form.dateApplied !== ""
   )
 }
@@ -401,22 +398,44 @@ export function ApplicationBoard({
     }
   }, [addOpen, addDefaultStatus])
 
-  function handleAdd() {
-    if (!isFormValid(addForm)) return
-    const next: Application = {
-      id: Date.now().toString(),
-      company: addForm.company.trim(),
-      referenceNumber: addForm.referenceNumber.trim() || undefined,
-      role: addForm.role.trim(),
-      workType: (addForm.workType as WorkType) || undefined,
-      salary: addForm.salary ? Number(addForm.salary) : undefined,
-      url: addForm.url.trim(),
-      dateApplied: addForm.dateApplied,
-      status: addForm.status,
-      lastActivity: "Just now",
+  async function handleAdd() {
+    if (!isFormValid(addForm)) return;
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/applications`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // 🔥 important for cookies
+          body: JSON.stringify({
+            company: addForm.company.trim(),
+            role: addForm.role.trim(),
+            job_url: addForm.url.trim() || null,
+            status: addForm.status,
+            applied_date: addForm.dateApplied || null,
+            salary_min: addForm.salary ? Number(addForm.salary) : null,
+            // add other fields if needed
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create application");
+      }
+
+      // ✅ update state with backend response
+      setApplications((prev) => [...prev, data]);
+
+      onAddOpenChange(false);
+    } catch (err) {
+      console.error(err);
+      // optionally show UI error
     }
-    setApplications((prev) => [...prev, next])
-    onAddOpenChange(false)
   }
 
   function handleEdit(app: Application) {
@@ -440,17 +459,17 @@ export function ApplicationBoard({
       prev.map((a) =>
         a.id === editingApp.id
           ? {
-              ...a,
-              company: editForm.company.trim(),
-              referenceNumber: editForm.referenceNumber.trim() || undefined,
-              role: editForm.role.trim(),
-              workType: (editForm.workType as WorkType) || undefined,
-              salary: editForm.salary ? Number(editForm.salary) : undefined,
-              url: editForm.url.trim(),
-              dateApplied: editForm.dateApplied,
-              status: editForm.status,
-              lastActivity: "Just now",
-            }
+            ...a,
+            company: editForm.company.trim(),
+            referenceNumber: editForm.referenceNumber.trim() || undefined,
+            role: editForm.role.trim(),
+            workType: (editForm.workType as WorkType) || undefined,
+            salary: editForm.salary ? Number(editForm.salary) : undefined,
+            url: editForm.url.trim(),
+            dateApplied: editForm.dateApplied,
+            status: editForm.status,
+            lastActivity: "Just now",
+          }
           : a
       )
     )

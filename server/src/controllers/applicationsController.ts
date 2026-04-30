@@ -72,6 +72,7 @@ export async function createApplication(req: Request, res: Response) {
     }
 
     const application = {
+        user_id: (req as AuthenticatedRequest).user.id,
         company,
         role,
         job_url: job_url || null,
