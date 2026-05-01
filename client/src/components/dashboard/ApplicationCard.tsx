@@ -236,16 +236,20 @@ export function ApplicationCard({ app, onMoveNext, onEdit, onArchive }: Props) {
             {/* URL */}
             <div className="pt-3 border-t border-border">
               <p className="text-[11px] text-muted-foreground mb-1">Job posting</p>
-              <a
-                href={app.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-primary hover:underline truncate"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <IconExternalLink size={12} className="shrink-0" />
-                <span className="truncate">{app.url}</span>
-              </a>
+              {app.url ? (
+                <a
+                  href={app.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-primary hover:underline truncate"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <IconExternalLink size={12} className="shrink-0" />
+                  <span className="truncate">{app.url}</span>
+                </a>
+              ) : (
+                <p className="text-xs text-muted-foreground">No URL provided</p>
+              )}
             </div>
 
             {/* Status tag */}

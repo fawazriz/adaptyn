@@ -77,7 +77,14 @@ export async function fetchApplications(): Promise<Application[]> {
   }
 
   const data = await res.json();
-  return data;
+
+  // Map backend field names to client-facing Application fields.
+  // Server returns applied_date and job_url, while client uses dateApplied and url.
+  return data.map((app: any) => ({
+    ...app,
+    dateApplied: app.applied_date || "",
+    url: app.job_url || null,
+  })) as Application[];
 }
 
 // ─── Form helpers ─────────────────────────────────────────────────────────────
