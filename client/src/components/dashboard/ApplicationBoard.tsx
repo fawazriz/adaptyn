@@ -17,6 +17,7 @@ import type { Application, ApplicationStatus, WorkType } from "./types"
 
 // ─── Column config ────────────────────────────────────────────────────────────
 
+// Define the order of application statuses for moving cards and displaying options
 const STATUS_ORDER: ApplicationStatus[] = [
   "applied",
   "screening",
@@ -25,6 +26,8 @@ const STATUS_ORDER: ApplicationStatus[] = [
   "rejected",
 ]
 
+
+// Column configuration for the application board. Each column corresponds to an application status.
 const COLUMNS: ColumnConfig[] = [
   {
     id: "applied",
@@ -58,8 +61,8 @@ const COLUMNS: ColumnConfig[] = [
   },
 ]
 
-// ─── Seed data ────────────────────────────────────────────────────────────────
 
+// API call to fetch all applications for the current user. Called on initial load of the dashboard.
 export async function fetchApplications(): Promise<Application[]> {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/applications`,
@@ -77,137 +80,18 @@ export async function fetchApplications(): Promise<Application[]> {
   return data;
 }
 
-/*
-const SEED: Application[] = [
-  {
-    id: "1",
-    company: "Stripe",
-    role: "Backend Engineer Intern",
-    status: "applied",
-    url: "https://stripe.com/jobs",
-    dateApplied: "2024-09-13",
-    lastActivity: "2d ago",
-    statusTag: "Follow-up due",
-    note: "Referral from CS3511 TA",
-    workType: "hybrid",
-    salary: 65,
-  },
-  {
-    id: "2",
-    company: "Vercel",
-    role: "Platform Engineering Intern",
-    status: "applied",
-    url: "https://vercel.com/careers",
-    dateApplied: "2024-09-10",
-    lastActivity: "5d ago",
-    workType: "remote",
-    salary: 60,
-  },
-  {
-    id: "3",
-    company: "Ramp",
-    role: "Software Engineer Intern",
-    status: "applied",
-    url: "https://ramp.com/careers",
-    dateApplied: "2024-09-08",
-    lastActivity: "1w ago",
-    workType: "in-person",
-    referenceNumber: "REQ-4821",
-  },
-  {
-    id: "4",
-    company: "GitHub",
-    role: "SWE Intern · Fall 2025",
-    status: "applied",
-    url: "https://github.com/about/careers",
-    dateApplied: "2024-09-12",
-    lastActivity: "3d ago",
-    statusTag: "Follow-up due",
-    workType: "remote",
-    salary: 70,
-  },
-  {
-    id: "5",
-    company: "Linear",
-    role: "Frontend Engineer",
-    status: "screening",
-    url: "https://linear.app/careers",
-    dateApplied: "2024-09-05",
-    lastActivity: "Yesterday",
-    statusTag: "Phone call Thu 3pm",
-    workType: "remote",
-    salary: 95,
-  },
-  {
-    id: "6",
-    company: "Notion",
-    role: "Full Stack Intern",
-    status: "screening",
-    url: "https://notion.com/careers",
-    dateApplied: "2024-09-03",
-    lastActivity: "2d ago",
-    note: "Applied through campus recruiting",
-    workType: "hybrid",
-  },
-  {
-    id: "7",
-    company: "Anthropic",
-    role: "AI Safety Engineer",
-    status: "interview",
-    url: "https://anthropic.com/careers",
-    dateApplied: "2024-08-28",
-    lastActivity: "Today",
-    statusTag: "Technical · Mon 2pm",
-    note: "Prep: systems design + ML fundamentals",
-    workType: "hybrid",
-    salary: 120,
-    referenceNumber: "ANT-2024-SWE",
-  },
-  {
-    id: "8",
-    company: "Scale AI",
-    role: "Software Engineer",
-    status: "interview",
-    url: "https://scale.com/careers",
-    dateApplied: "2024-08-30",
-    lastActivity: "Today",
-    statusTag: "HR screen done",
-    workType: "in-person",
-    salary: 110,
-  },
-  {
-    id: "9",
-    company: "Meta",
-    role: "Software Engineer",
-    status: "rejected",
-    url: "https://metacareers.com",
-    dateApplied: "2024-08-10",
-    lastActivity: "3w ago",
-    workType: "hybrid",
-  },
-  {
-    id: "10",
-    company: "Google",
-    role: "SWE L3 — New Grad",
-    status: "rejected",
-    url: "https://careers.google.com",
-    dateApplied: "2024-08-05",
-    lastActivity: "2w ago",
-    note: "No feedback provided",
-    workType: "hybrid",
-    salary: 130,
-  },
-]
-*/
 // ─── Form helpers ─────────────────────────────────────────────────────────────
 
+// Utility CSS class for select inputs to maintain consistent styling across the form
 const selectCls =
   "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
 
+// Utility to get today's date in YYYY-MM-DD format for default date values in forms
 function today() {
   return new Date().toISOString().split("T")[0]
 }
 
+// Form data structure for both adding and editing applications. This allows us to reuse the same form component for both actions.
 const EMPTY_FORM = {
   company: "",
   referenceNumber: "",
@@ -223,6 +107,16 @@ type FormState = typeof EMPTY_FORM
 
 // ─── Reusable form fields ─────────────────────────────────────────────────────
 
+/**
+ * ApplicationForm
+ *
+ * Reusable form component for adding or editing job applications.
+ * Renders form fields for company, role, work type, salary, URL, date applied, and status.
+ * Used in both the "Add Application" and "Edit Application" dialogs.
+ *
+ * @param form - Current form state object
+ * @param onChange - Callback fired when any field changes (receives partial update)
+ */
 function ApplicationForm({
   form,
   onChange,
@@ -358,6 +252,17 @@ function ApplicationForm({
   )
 }
 
+
+/*
+  * isFormValid
+  * Utility function to check if the required fields in the form are filled out.
+  * Used to enable/disable the "Add" and "Save changes" buttons in the dialogs.
+  * Currently checks that company, role, and date applied are not empty.
+  * 
+  * @param form - The current state of the form to validate
+  * @returns boolean indicating whether the form is valid or not
+
+*/
 function isFormValid(form: FormState) {
   return (
     form.company.trim() !== "" &&
@@ -368,6 +273,7 @@ function isFormValid(form: FormState) {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+// Props for the ApplicationBoard component, which manages the state and interactions for the main application board. This includes the open state of the add dialog, the default status for new applications, and callbacks for opening the add dialog from columns.
 interface Props {
   addOpen: boolean
   addDefaultStatus: ApplicationStatus
