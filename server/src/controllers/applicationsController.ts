@@ -122,7 +122,6 @@ export async function updateApplication(req: Request, res: Response) {
     if (status) updates.status = status;
     if (applied_date) updates.applied_date = applied_date;
 
-    console.log(updates);
 
     const { data, error } = await supabase
         .from("applications")
@@ -131,10 +130,7 @@ export async function updateApplication(req: Request, res: Response) {
         .eq("user_id", (req as AuthenticatedRequest).user.id)
         .select("*")
         .maybeSingle();
-    
-    console.log("params id:", id);
-    console.log("user id:", (req as AuthenticatedRequest).user.id);
-    console.log("updates:", updates);
+
 
     if (error) {
         return res.status(400).json({ error: error.message });

@@ -7,6 +7,7 @@ import supabase from './db/supabase-client'
 import authRouter from './routes/auth'
 import { requireAuth } from './middleware/auth'
 import applicationRouter from './routes/applications'
+import profilesRouter from './routes/profiles'
 
 dotenv.config()
 
@@ -25,6 +26,7 @@ app.use(
 
 app.use('/api/auth', authRouter)
 app.use('/api/applications', requireAuth, applicationRouter)
+app.use('/api/profiles', requireAuth, profilesRouter)
 
 app.get('/', (req, res) => {
   res.send('Hello, world!')
