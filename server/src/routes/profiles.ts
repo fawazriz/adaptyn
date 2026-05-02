@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { getProfileById, updateProfile, deleteProfile } from "../controllers/profilesController";
+import { getMyProfile, updateMyProfile, deleteMyProfile } from "../controllers/profilesController";
 
 const profilesRouter = Router();
 
-profilesRouter.get("/:id", getProfileById);
-profilesRouter.put("/:id", updateProfile);
-profilesRouter.delete("/:id", deleteProfile);
+profilesRouter.get("/", getMyProfile);
+profilesRouter.put("/", updateMyProfile);
+profilesRouter.delete("/", deleteMyProfile);
 
 export default profilesRouter;

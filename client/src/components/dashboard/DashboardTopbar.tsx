@@ -19,12 +19,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ThemeToggle } from "@/components/shared/ThemeToggle"
+import { useState, useEffect } from "react"
+import { fetchProfile, intiialsFromProfile } from "@/lib/profile"
+import { Profile } from "./types"
+
 
 interface Props {
   onAddClick: () => void
 }
 
 export function DashboardTopbar({ onAddClick }: Props) {
+  const [profile, setProfile] = useState<Profile | null>(null)
+
+  useEffect(() => {
+    fetchProfile().then(setProfile).catch(console.error)
+  }, [])
+
+
+
   return (
     <div className="h-14 border-b border-border flex items-center gap-3 px-5 shrink-0 bg-card">
       {/* Page title */}
@@ -75,15 +87,15 @@ export function DashboardTopbar({ onAddClick }: Props) {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-1.5 rounded-md hover:bg-muted px-1.5 py-1 transition-colors ml-1">
               <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-[9px] font-semibold text-primary select-none">AJ</span>
+                <span className="text-[9px] font-semibold text-primary select-none">{intiialsFromProfile(profile)}</span>
               </div>
               <IconChevronDown size={11} className="text-muted-foreground" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
             <div className="px-2 py-1.5">
-              <p className="text-xs font-medium text-foreground">Alex Johnson</p>
-              <p className="text-[11px] text-muted-foreground">alex@gatech.edu</p>
+              <p className="text-xs font-medium text-foreground">{profile?.full_name || "Profile"}</p>
+              <p className="text-[11px] text-muted-foreground">{profile?.email || "email@example.com"}</p>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2 text-xs cursor-pointer">

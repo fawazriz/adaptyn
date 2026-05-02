@@ -1,9 +1,13 @@
 import supabase from "../db/supabase-client";
 import { Request, Response } from "express";
+import { User } from "@supabase/auth-js/dist/module/lib/types";
 
+interface AuthenticatedRequest extends Request {
+    user: User;
+}
 
-export async function getProfileById(req: Request, res: Response) {
-    const { id } = req.params;
+export async function getMyProfile(req: Request, res: Response) {
+    const id = (req as AuthenticatedRequest).user.id;
 
     const { data, error } = await supabase
         .from("profiles")
@@ -18,8 +22,8 @@ export async function getProfileById(req: Request, res: Response) {
     return res.status(200).json(data);
 }
 
-export async function updateProfile(req: Request, res: Response) {
-    const { id } = req.params;
+export async function updateMyProfile(req: Request, res: Response) {
+    const id = (req as AuthenticatedRequest).user.id;
     const { name, headline, location, bio } = req.body;
 
     const updates: any = {};
@@ -45,8 +49,8 @@ export async function updateProfile(req: Request, res: Response) {
     return res.status(200).json(data);
 }
 
-export async function deleteProfile(req: Request, res: Response) {
-    const { id } = req.params;
+export async function deleteMyProfile(req: Request, res: Response) {
+    const id = (req as AuthenticatedRequest).user.id;
 
     const { data, error } = await supabase
         .from("profiles")

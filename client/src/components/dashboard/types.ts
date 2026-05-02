@@ -21,3 +21,9 @@ export interface Application {
   statusTag?: string
   note?: string
 }
+
+export interface Profile {
+  id?: string
+  full_name: string
+  email: string
+}
