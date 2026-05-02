@@ -130,7 +130,7 @@ export function ApplicationCard({ app, onMoveNext, onEdit, onArchive }: Props) {
                 <IconDots size={13} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuContent align="end" className="w-44" onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem
                 className="gap-2 text-xs cursor-pointer"
                 onClick={() => onEdit(app)}

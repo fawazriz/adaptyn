@@ -322,7 +322,7 @@ export function ApplicationBoard({
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // 🔥 important for cookies
+          credentials: "include", // important for cookies
           body: JSON.stringify({
             company: addForm.company.trim(),
             role: addForm.role.trim(),
@@ -366,28 +366,46 @@ export function ApplicationBoard({
     setEditOpen(true)
   }
 
-  function handleSaveEdit() {
-    if (!editingApp || !isFormValid(editForm)) return
-    setApplications((prev) =>
-      prev.map((a) =>
-        a.id === editingApp.id
-          ? {
-            ...a,
+  async function handleSaveEdit() {
+    if (!editingApp || !isFormValid(editForm)) return;
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/applications/${editingApp.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
             company: editForm.company.trim(),
-            referenceNumber: editForm.referenceNumber.trim() || undefined,
             role: editForm.role.trim(),
-            workType: (editForm.workType as WorkType) || undefined,
-            salary: editForm.salary ? Number(editForm.salary) : undefined,
-            url: editForm.url.trim(),
-            dateApplied: editForm.dateApplied,
+            job_url: editForm.url.trim() || null,
             status: editForm.status,
-            lastActivity: "Just now",
-          }
-          : a
-      )
-    )
-    setEditOpen(false)
-    setEditingApp(null)
+            applied_date: editForm.dateApplied || null,
+            salary_min: editForm.salary ? Number(editForm.salary) : null,
+            // include other fields if needed
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update application");
+      }
+
+      // ✅ update local state with backend response
+      setApplications((prev) =>
+        prev.map((a) => (a.id === editingApp.id ? data : a))
+      );
+
+      setEditOpen(false);
+      setEditingApp(null);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   function handleMoveNext(id: string) {
@@ -405,10 +423,15 @@ export function ApplicationBoard({
     setApplications((prev) => prev.filter((a) => a.id !== id))
   }
 
-  const followUps = applications.filter((a) =>
-    a.statusTag?.toLowerCase().includes("follow")
-  ).length
-  const interviews = applications.filter((a) => a.status === "interview").length
+  const followUps = applications.filter((a) => {
+    if (!a || !a.statusTag) return false;
+    return a.statusTag.toLowerCase().includes("follow");
+  }).length;
+
+  const interviews = applications.filter((a) => {
+    if (!a) return false;
+    return a.status === "interview";
+  }).length;
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -419,7 +442,10 @@ export function ApplicationBoard({
             <ApplicationColumn
               key={col.id}
               config={col}
-              cards={applications.filter((a) => a.status === col.id)}
+              cards={applications.filter((a) => {
+                if (!a) return false;
+                return a.status === col.id;
+              })}
               onAddClick={() => onColumnAddClick(col.id)}
               onMoveNext={handleMoveNext}
               onEdit={handleEdit}

@@ -8,9 +8,9 @@ interface AuthenticatedRequest extends Request {
 
 export async function getAllApplications(req: Request, res: Response) {
     const { data, error } = await supabase
-  .from("applications")
-  .select("*")
-  .eq("user_id", (req as AuthenticatedRequest).user.id);
+        .from("applications")
+        .select("*")
+        .eq("user_id", (req as AuthenticatedRequest).user.id);
 
     if (error) {
         return res.status(500).json({ error: error.message });
@@ -121,31 +121,36 @@ export async function updateApplication(req: Request, res: Response) {
     if (job_url) updates.job_url = job_url;
     if (status) updates.status = status;
     if (applied_date) updates.applied_date = applied_date;
-    if (salary_min) updates.salary_min = salary_min;
-    if (salary_max) updates.salary_max = salary_max;
-    if (location) updates.location = location;
-    if (source) updates.source = source;
-    if (resume_version_id) updates.resume_version_id = resume_version_id;
-    if (notes) updates.notes = notes;
+
+    console.log(updates);
 
     const { data, error } = await supabase
         .from("applications")
         .update(updates)
         .eq("id", id)
+        .eq("user_id", (req as AuthenticatedRequest).user.id)
         .select("*")
-        .single();
+        .maybeSingle();
+    
+    console.log("params id:", id);
+    console.log("user id:", (req as AuthenticatedRequest).user.id);
+    console.log("updates:", updates);
 
     if (error) {
         return res.status(400).json({ error: error.message });
     }
 
+    if (!data) {
+        return res.status(404).json({ error: "Application not found" });
+    }
     return res.status(200).json(data);
+
 }
 
 export async function deleteApplication(req: Request, res: Response) {
     const { id } = req.params;
 
-    const { error } = await supabase.from("applications").delete().eq("id", id);
+    const { error } = await supabase.from("applications").delete().eq("id", id).eq("user_id", (req as AuthenticatedRequest).user.id);
 
     if (error) {
         return res.status(400).json({ error: error.message });
