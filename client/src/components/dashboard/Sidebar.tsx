@@ -13,6 +13,10 @@ import {
 } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
+import { useState, useEffect } from "react"
+import { fetchProfile, intiialsFromProfile } from "@/lib/profile"
+import { Profile } from "./types"
+
 
 const NAV_ITEMS = [
   { icon: IconLayoutKanban, label: "Tracker", href: "/dashboard" },
@@ -32,6 +36,11 @@ interface Props {
 
 export function Sidebar({ collapsed, onToggle }: Props) {
   const pathname = usePathname()
+  const [profile, setProfile] = useState<Profile | null>(null)
+
+  useEffect(() => {
+    fetchProfile().then(setProfile).catch(console.error)
+  }, [])
 
   return (
     <aside
@@ -108,11 +117,11 @@ export function Sidebar({ collapsed, onToggle }: Props) {
         {!collapsed && (
           <div className="flex items-center gap-2.5 px-2.5 py-2 mt-1">
             <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <span className="text-[9px] font-semibold text-primary">AJ</span>
+              <span className="text-[9px] font-semibold text-primary">{intiialsFromProfile(profile)}</span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-foreground truncate">Alex Johnson</p>
-              <p className="text-[10px] text-muted-foreground truncate">alex@gatech.edu</p>
+              <p className="text-xs font-medium text-foreground truncate">{profile?.full_name || "Profile"}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{profile?.email || "email@example.com"}</p>
             </div>
           </div>
         )}
