@@ -502,7 +502,6 @@ export function ApplicationBoard({
             </span>
           )}
         </div>
-        <span className="text-xs text-muted-foreground/50">Last synced: just now</span>
       </div>
 
       {/* ── Add Dialog ── */}

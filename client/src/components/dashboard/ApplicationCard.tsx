@@ -31,32 +31,36 @@ import {
 import type { Application, ApplicationStatus } from "./types"
 
 const STATUS_ORDER: ApplicationStatus[] = [
+  "saved",
   "applied",
-  "screening",
+  "phone_screen",
   "interview",
   "offer",
   "rejected",
-]
+];
 
 const NEXT_STAGE_LABEL: Partial<Record<ApplicationStatus, string>> = {
+  saved: "Move to Applied",
   applied: "Move to Screening",
-  screening: "Move to Interview",
+  phone_screen: "Move to Interview",
   interview: "Move to Offer",
   offer: "Move to Rejected",
-}
+};
 
 const STATUS_LABEL: Record<ApplicationStatus, string> = {
+  saved: "Saved",
   applied: "Applied",
-  screening: "Screening",
+  phone_screen: "Screening", // UI label stays nice
   interview: "Interview",
   offer: "Offer",
   rejected: "Rejected",
-}
+};
 
 const STATUS_CLASSES: Record<ApplicationStatus, string> = {
-  applied: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20",
-  screening: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-400 dark:border-violet-500/20",
-  interview: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20",
+  saved: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-400 dark:border-slate-500/20",
+  applied: "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20",
+  phone_screen: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-400 dark:border-yellow-500/20",
+  interview: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-400 dark:border-violet-5００/2０",
   offer: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20",
   rejected: "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20",
 }
