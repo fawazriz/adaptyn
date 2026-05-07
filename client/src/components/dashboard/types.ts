@@ -1,9 +1,10 @@
 export type ApplicationStatus =
+  | "saved"
   | "applied"
-  | "screening"
+  | "phone_screen"
   | "interview"
   | "offer"
-  | "rejected"
+  | "rejected";
 
 export type WorkType = "in-person" | "hybrid" | "remote"
 

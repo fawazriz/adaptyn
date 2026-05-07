@@ -19,27 +19,29 @@ import type { Application, ApplicationStatus, WorkType } from "./types"
 
 // Define the order of application statuses for moving cards and displaying options
 const STATUS_ORDER: ApplicationStatus[] = [
-  "applied",
-  "screening",
-  "interview",
-  "offer",
-  "rejected",
+  'saved', 'applied', 'phone_screen', 'interview', 'offer', 'rejected'
 ]
 
 
 // Column configuration for the application board. Each column corresponds to an application status.
 const COLUMNS: ColumnConfig[] = [
   {
-    id: "applied",
-    label: "Applied",
+    id: "saved",
+    label: "Saved",
     dotColor: "bg-slate-400 dark:bg-slate-500",
     labelColor: "text-slate-600 dark:text-slate-400",
   },
   {
-    id: "screening",
-    label: "Screening",
-    dotColor: "bg-blue-500",
-    labelColor: "text-blue-600 dark:text-blue-400",
+    id: "applied",
+    label: "Applied",
+    dotColor: "bg-green-500",
+    labelColor: "text-green-600 dark:text-green-400",
+  },
+  {
+    id: "phone_screen",
+    label: "Phone Screen",
+    dotColor: "bg-yellow-500",
+    labelColor: "text-yellow-600 dark:text-yellow-400",
   },
   {
     id: "interview",
@@ -408,15 +410,45 @@ export function ApplicationBoard({
     }
   }
 
-  function handleMoveNext(id: string) {
+  async function handleMoveNext(id: string) {
+    const app = applications.find((app) => app.id === id)
+    if (!app) return
+
+    const idx = STATUS_ORDER.indexOf(app.status)
+    if (idx >= STATUS_ORDER.length - 1) return
+
+    const nextStatus = STATUS_ORDER[idx + 1]
+
     setApplications((prev) =>
       prev.map((app) => {
         if (app.id !== id) return app
-        const idx = STATUS_ORDER.indexOf(app.status)
-        if (idx >= STATUS_ORDER.length - 1) return app
-        return { ...app, status: STATUS_ORDER[idx + 1], lastActivity: "Just now" }
+        return { ...app, status: nextStatus, lastActivity: "Just now" }
       })
     )
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/applications/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            status: nextStatus,
+          }),
+        }
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update application status");
+      }
+
+    } catch (err) {
+      console.error("Failed to persist status update", err)
+    }
   }
 
   function handleArchive(id: string) {
