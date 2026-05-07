@@ -38,9 +38,24 @@ export function readStoredResumes(): ResumeVersion[] {
   if (!Array.isArray(parsed)) return mockResumes
 
   // Best-effort validation; we still fall back to mock on shape mismatch.
-  if (parsed.every((r) => r && typeof r === "object" && "id" in (r as any) && "name" in (r as any))) {
-    return parsed as ResumeVersion[]
+  const arr = parsed as unknown[]
+  const isResumeVersionLike = (r: unknown): r is ResumeVersion => {
+    if (!r || typeof r !== "object") return false
+    const rec = r as Record<string, unknown>
+    return (
+      typeof rec.id === "string" &&
+      typeof rec.name === "string" &&
+      typeof rec.version === "string" &&
+      typeof rec.updatedAt === "string" &&
+      typeof rec.applicationsCount === "number" &&
+      typeof rec.notes === "string" &&
+      (rec.status === "active" || rec.status === "archived" || rec.status === "draft") &&
+      Array.isArray(rec.versionHistory) &&
+      Array.isArray(rec.linkedApplications)
+    )
   }
+
+  if (arr.every(isResumeVersionLike)) return arr
 
   return mockResumes
 }
