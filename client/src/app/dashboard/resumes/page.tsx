@@ -7,16 +7,128 @@ import { CreateResumeDialog } from "@/components/resumes/CreateResumeDialog"
 import { ResumeDetailPanel } from "@/components/resumes/ResumeDetailPanel"
 import { ResumeLibrary } from "@/components/resumes/ResumeLibrary"
 import { ResumesStats } from "@/components/resumes/ResumesStats"
-import { readStoredResumes } from "@/components/resumes/resume-store"
+import type { ResumeVersion } from "@/components/resumes/types"
+import { mockResumes } from "@/components/resumes/mock-data"
+import { fetchResumes } from "@/lib/resume"
+import type { ApplicationStatus } from "@/components/dashboard/types"
 
 export default function ResumesPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [resumes, setResumes] = useState(() => readStoredResumes())
+  const [resumes, setResumes] = useState<ResumeVersion[]>([])
   const [selectedResumeId, setSelectedResumeId] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+
+  type ApplicationApiRow = {
+    id: string
+    company: string
+    role: string
+    job_url?: string | null
+    status: ApplicationStatus | string
+    applied_date?: string | null
+    resume_version_id?: string | null
+  }
+
+  function formatShortDate(input?: string | null) {
+    if (!input) return "—"
+    const d = new Date(input)
+    if (Number.isNaN(d.getTime())) return "—"
+    return d.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  }
 
   useEffect(() => {
-    // Keep selection stable when the stored list changes.
-    setResumes(readStoredResumes())
+    let cancelled = false
+
+    async function load() {
+      try {
+        setIsLoading(true)
+        const [resumeRows, applications] = await Promise.all([
+          fetchResumes(),
+          (async () => {
+            const res = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/api/applications`,
+              {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+              }
+            )
+            if (!res.ok) {
+              throw new Error("Failed to fetch applications")
+            }
+            return res.json()
+          })() as Promise<ApplicationApiRow[]>,
+        ])
+
+        const mapped: ResumeVersion[] = resumeRows.map((r) => {
+          const linked = applications.filter(
+            (a) => a.resume_version_id && a.resume_version_id === r.id
+          )
+
+          const content = r.content as unknown
+          const notes =
+            typeof content === "object" &&
+            content !== null &&
+            "notes" in (content as Record<string, unknown>) &&
+            typeof (content as Record<string, unknown>).notes === "string"
+              ? (content as Record<string, unknown>).notes
+              : ""
+
+          const updatedAt = formatShortDate(r.updated_at ?? r.created_at)
+
+          return {
+            id: String(r.id),
+            name: String(r.name ?? "Untitled resume"),
+            version: "current",
+            targetRole: String(r.target_role ?? ""),
+            status: (r.status === "active" || r.status === "archived" || r.status === "draft"
+              ? r.status
+              : "draft") as ResumeVersion["status"],
+            updatedAt,
+            applicationsCount: linked.length,
+            notes: String(notes ?? ""),
+            versionHistory: [
+              {
+                id: `${r.id}_current`,
+                version: "current",
+                updatedAt,
+                summary: "Current snapshot (stored in backend).",
+              },
+            ],
+            linkedApplications: linked.map((app) => ({
+              id: app.id,
+              company: app.company,
+              role: app.role,
+              stage: String(app.status),
+              appliedAt: formatShortDate(app.applied_date),
+            })),
+          }
+        })
+
+        if (cancelled) return
+        setResumes(mapped)
+        setSelectedResumeId((prev) => {
+          if (prev && mapped.some((m) => m.id === prev)) return prev
+          return mapped[0]?.id ?? ""
+        })
+      } catch {
+        if (cancelled) return
+        // If the API is unreachable (e.g. auth/cookie not present), keep the UI usable.
+        setResumes(mockResumes)
+        setSelectedResumeId(mockResumes[0]?.id ?? "")
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+
+    load()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -32,7 +144,9 @@ export default function ResumesPage() {
   )
 
   const totalResumes = resumes.length
-  const activeResumes = resumes.filter((resume) => resume.status === "active").length
+  const activeResumes = Array.isArray(resumes)
+    ? resumes.filter((resume) => resume.status === "active").length
+    : 0
   const linkedApplications = resumes.reduce(
     (sum, resume) => sum + resume.applicationsCount,
     0
@@ -74,7 +188,9 @@ export default function ResumesPage() {
               />
             </section>
 
-            {selectedResume ? <ResumeDetailPanel resume={selectedResume} /> : null}
+            {isLoading ? null : selectedResume ? (
+              <ResumeDetailPanel resume={selectedResume} />
+            ) : null}
           </div>
         </main>
       </div>

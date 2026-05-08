@@ -7,25 +7,89 @@ import { Sidebar } from "@/components/dashboard/Sidebar"
 import { ThemeToggle } from "@/components/shared/ThemeToggle"
 import { ResumeFormPanel } from "@/components/resumes/editor/ResumeFormPanel"
 import { ResumePreview } from "@/components/resumes/editor/ResumePreview"
+import { fetchResumeById } from "@/lib/resume"
 
-const STORAGE_PREFIX = "adaptyn_resume_editor_data_v1"
-
-function storageKey(resumeId: string) {
-  return `${STORAGE_PREFIX}:${resumeId}`
+function safeString(v: unknown): string {
+  return typeof v === "string" ? v : ""
 }
 
-function safeParse(json: string): unknown {
-  try {
-    return JSON.parse(json) as unknown
-  } catch {
-    return null
+function safeStringArray(v: unknown): string[] {
+  if (!Array.isArray(v)) return []
+  return v.filter((x) => typeof x === "string") as string[]
+}
+
+function parseResumeData(content: unknown): ResumeData | null {
+  if (!content || typeof content !== "object") return null
+  const rec = content as Record<string, unknown>
+
+  const header = rec.header as Record<string, unknown> | undefined
+  const education = rec.education
+  const experience = rec.experience
+  const projects = rec.projects
+  const skills = rec.skills as Record<string, unknown> | undefined
+
+  if (!header || typeof header !== "object") return null
+  if (!Array.isArray(education) || !Array.isArray(experience) || !Array.isArray(projects)) return null
+  if (!skills || typeof skills !== "object") return null
+
+  const parsed: ResumeData = {
+    id: safeString(rec.id) || sampleResume.id,
+    header: {
+      fullName: safeString(header.fullName),
+      email: safeString(header.email),
+      phone: safeString(header.phone),
+      location: safeString(header.location),
+      linkedIn: safeString(header.linkedIn),
+      githubOrPortfolio: safeString(header.githubOrPortfolio),
+    },
+    education: education.map((e) => {
+      const r = e as Record<string, unknown>
+      return {
+        id: safeString(r.id) || `edu_${Math.random().toString(16).slice(2)}`,
+        school: safeString(r.school),
+        degree: safeString(r.degree),
+        graduationDate: safeString(r.graduationDate),
+        gpa: r.gpa === undefined ? undefined : safeString(r.gpa),
+      }
+    }),
+    experience: experience.map((e) => {
+      const r = e as Record<string, unknown>
+      return {
+        id: safeString(r.id) || `exp_${Math.random().toString(16).slice(2)}`,
+        company: safeString(r.company),
+        role: safeString(r.role),
+        dates: safeString(r.dates),
+        location: safeString(r.location),
+        bullets: safeStringArray(r.bullets),
+      }
+    }),
+    projects: projects.map((p) => {
+      const r = p as Record<string, unknown>
+      return {
+        id: safeString(r.id) || `proj_${Math.random().toString(16).slice(2)}`,
+        projectName: safeString(r.projectName),
+        techStack: safeString(r.techStack),
+        link: r.link === undefined ? undefined : safeString(r.link),
+        bullets: safeStringArray(r.bullets),
+      }
+    }),
+    skills: {
+      languages: safeStringArray(skills.languages),
+      frameworks: safeStringArray(skills.frameworks),
+      tools: safeStringArray(skills.tools),
+      databases: safeStringArray(skills.databases),
+    },
   }
+
+  // Ensure the editor has at least something sensible.
+  if (!parsed.header.fullName) return null
+
+  return parsed
 }
 
 export function ResumeEditorShell({ resumeId }: { resumeId: string }) {
   const initial = useMemo<ResumeData>(() => {
-    // UI-only: seed with a realistic CS new-grad resume.
-    // Later: backend will hydrate structured data for resumeId.
+    // UI-only fallback: seed with a realistic CS new-grad resume.
     return { ...sampleResume, id: resumeId }
   }, [resumeId])
 
@@ -33,19 +97,29 @@ export function ResumeEditorShell({ resumeId }: { resumeId: string }) {
   const [resume, setResume] = useState<ResumeData>(initial)
 
   useEffect(() => {
-    if (typeof window === "undefined") return
-    const raw = window.localStorage.getItem(storageKey(resumeId))
-    if (!raw) return
-    const parsed = safeParse(raw)
-    if (parsed && typeof parsed === "object") {
-      setResume(parsed as ResumeData)
-    }
-  }, [resumeId])
+    let cancelled = false
 
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    window.localStorage.setItem(storageKey(resumeId), JSON.stringify(resume))
-  }, [resume, resumeId])
+    async function load() {
+      try {
+        const row = await fetchResumeById(resumeId)
+        const parsed = parseResumeData(row.content)
+        if (cancelled) return
+        if (parsed) {
+          setResume({ ...parsed, id: resumeId })
+        } else {
+          setResume(initial)
+        }
+      } catch {
+        if (cancelled) return
+        setResume(initial)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [resumeId, initial])
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

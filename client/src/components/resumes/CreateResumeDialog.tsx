@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { createMockResume } from "@/components/resumes/resume-store"
+import { createResume } from "@/lib/resume"
+import { sampleResume } from "@/components/resumes/editor/sampleResumeData"
 
 export function CreateResumeDialog() {
   const router = useRouter()
@@ -24,23 +25,47 @@ export function CreateResumeDialog() {
   const [targetRole, setTargetRole] = useState("")
   const [template, setTemplate] = useState("")
   const [notes, setNotes] = useState("")
+  const [open, setOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
 
   const isDisabled =
-    name.trim() === "" || targetRole.trim() === "" || template.trim() === ""
+    name.trim() === "" || targetRole.trim() === "" || template.trim() === "" || isCreating
 
-  function handleCreate() {
-    const newResume = createMockResume({
-      name,
-      targetRole,
-      template,
-      notes,
-    })
+  async function handleCreate() {
+    setIsCreating(true)
+    try {
+      const content = {
+        ...sampleResume,
+        header: {
+          ...sampleResume.header,
+          fullName: name.trim(),
+          // Keep editor demo data realistic; the modal doesn't collect email/phone yet.
+          email: sampleResume.header.email,
+          phone: sampleResume.header.phone,
+        },
+        // Store these for later backend compilation; editor UI can ignore them for now.
+        template: template.trim(),
+        notes: notes.trim(),
+      }
 
-    router.push(`/dashboard/resumes/${newResume.id}`)
+      const newResume = await createResume({
+        name: name.trim(),
+        target_role: targetRole.trim(),
+        content,
+        latex_source: template.trim(),
+        pdf_url: null,
+        status: "draft",
+      })
+
+      router.push(`/dashboard/resumes/${newResume.id}`)
+    } finally {
+      setIsCreating(false)
+      setOpen(false)
+    }
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
           Create resume
@@ -109,7 +134,7 @@ export function CreateResumeDialog() {
             <Button variant="outline">Cancel</Button>
           </DialogClose>
           <Button disabled={isDisabled} onClick={handleCreate}>
-            Create
+            {isCreating ? "Creating…" : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>

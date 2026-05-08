@@ -46,7 +46,7 @@ export function ResumeLibrary({
       </div>
 
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        {resumes.map((resume) => (
+        {Array.isArray(resumes) && resumes.map((resume) => (
           <Link
             key={resume.id}
             href={`/dashboard/resumes/${resume.id}`}
