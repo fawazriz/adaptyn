@@ -85,7 +85,7 @@ export async function fetchApplications(): Promise<Application[]> {
   return data.map((app: any) => ({
     ...app,
     dateApplied: app.applied_date || "",
-    url: app.job_url || null,
+    url: app.job_url ?? "",
   })) as Application[];
 }
 
@@ -361,7 +361,7 @@ export function ApplicationBoard({
       role: app.role,
       workType: app.workType ?? "",
       salary: app.salary?.toString() ?? "",
-      url: app.url,
+      url: app.url ?? "",
       dateApplied: app.dateApplied,
       status: app.status,
     })
