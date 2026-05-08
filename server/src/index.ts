@@ -8,6 +8,7 @@ import authRouter from './routes/auth'
 import { requireAuth } from './middleware/auth'
 import applicationRouter from './routes/applications'
 import profilesRouter from './routes/profiles'
+import resumesRouter from './routes/resumes'
 
 dotenv.config()
 
@@ -27,6 +28,7 @@ app.use(
 app.use('/api/auth', authRouter)
 app.use('/api/applications', requireAuth, applicationRouter)
 app.use('/api/profiles', requireAuth, profilesRouter)
+app.use('/api/resumes', requireAuth, resumesRouter)
 
 app.get('/', (req, res) => {
   res.send('Hello, world!')
