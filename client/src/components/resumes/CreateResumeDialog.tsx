@@ -23,13 +23,14 @@ export function CreateResumeDialog() {
 
   const [name, setName] = useState("")
   const [targetRole, setTargetRole] = useState("")
-  const [template, setTemplate] = useState("")
   const [notes, setNotes] = useState("")
   const [open, setOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
 
+  const DEFAULT_TEMPLATE = "jake";
+
   const isDisabled =
-    name.trim() === "" || targetRole.trim() === "" || template.trim() === "" || isCreating
+    name.trim() === "" || targetRole.trim() === "" || isCreating
 
   async function handleCreate() {
     setIsCreating(true)
@@ -39,23 +40,22 @@ export function CreateResumeDialog() {
         header: {
           ...sampleResume.header,
           fullName: name.trim(),
-          // Keep editor demo data realistic; the modal doesn't collect email/phone yet.
-          email: sampleResume.header.email,
-          phone: sampleResume.header.phone,
         },
-        // Store these for later backend compilation; editor UI can ignore them for now.
-        template: template.trim(),
-        notes: notes.trim(),
-      }
+        metadata: {
+          template: DEFAULT_TEMPLATE,
+          notes: notes.trim(),
+          targetRole: targetRole.trim(),
+        },
+      };
 
       const newResume = await createResume({
         name: name.trim(),
         target_role: targetRole.trim(),
         content,
-        latex_source: template.trim(),
+        latex_source: null,
         pdf_url: null,
         status: "draft",
-      })
+      });
 
       router.push(`/dashboard/resumes/${newResume.id}`)
     } finally {
@@ -101,18 +101,6 @@ export function CreateResumeDialog() {
               placeholder="Software Engineer Intern"
               value={targetRole}
               onChange={(event) => setTargetRole(event.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="template" className="text-sm font-medium text-foreground">
-              Template
-            </label>
-            <Input
-              id="template"
-              placeholder="Standard ATS"
-              value={template}
-              onChange={(event) => setTemplate(event.target.value)}
             />
           </div>
 

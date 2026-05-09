@@ -95,6 +95,8 @@ export function ResumeEditorShell({ resumeId }: { resumeId: string }) {
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [resume, setResume] = useState<ResumeData>(initial)
+  const [pdfUrl, setPdfUrl] = useState("")
+  const [isCompiling, setIsCompiling] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -116,10 +118,39 @@ export function ResumeEditorShell({ resumeId }: { resumeId: string }) {
     }
 
     load()
+    compilePdf()
     return () => {
       cancelled = true
     }
   }, [resumeId, initial])
+
+  async function compilePdf() {
+    try {
+      setIsCompiling(true)
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/resumes/${resumeId}/compile`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      )
+
+      if (!res.ok) {
+        throw new Error("Failed to compile PDF")
+      }
+
+      const blob = await res.blob()
+
+      const url = URL.createObjectURL(blob)
+
+      setPdfUrl(url)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsCompiling(false)
+    }
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -144,7 +175,12 @@ export function ResumeEditorShell({ resumeId }: { resumeId: string }) {
         <main className="flex-1 overflow-y-auto">
           <div className="grid h-[calc(100vh-64px)] grid-cols-1 gap-4 p-5 lg:grid-cols-[420px_1fr] lg:gap-6">
             <ResumeFormPanel value={resume} onChange={setResume} />
-            <ResumePreview value={resume} />
+            <ResumePreview
+              value={resume}
+              pdfUrl={pdfUrl}
+              onCompile={compilePdf}
+              isCompiling={isCompiling}
+            />
           </div>
         </main>
       </div>

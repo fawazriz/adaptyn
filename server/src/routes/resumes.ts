@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createResume, deleteResume, getAllResumes, getResumeById, updateResume } from "../controllers/resumesController";
+import { createResume, deleteResume, getAllResumes, getResumeById, compileResume, updateResume } from "../controllers/resumesController";
 
 const resumesRouter = Router();
 
@@ -8,5 +8,6 @@ resumesRouter.get("/:id", getResumeById);
 resumesRouter.post("/", createResume);
 resumesRouter.put("/:id", updateResume);
 resumesRouter.delete("/:id", deleteResume);
+resumesRouter.post("/:id/compile", compileResume);
 
 export default resumesRouter;

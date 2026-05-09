@@ -126,3 +126,32 @@ export async function deleteResume(req: Request, res: Response) {
 
     return res.status(204).send();
 }
+
+import { compileLatexToPdf } from "../lib/latex/compileLatex";
+import { generateResumeLatex } from "../lib/latex/generateResumeLatex";
+
+export async function compileResume(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const userId = (req as AuthenticatedRequest).user.id;
+
+    const { data: resume, error } = await supabase
+      .from("resumes")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .single();
+
+    if (error || !resume) {
+      return res.status(404).json({ error: "Resume not found" });
+    }
+
+    const latexSource = generateResumeLatex(resume.content);
+    const pdfPath = await compileLatexToPdf(latexSource);
+
+    return res.sendFile(pdfPath);
+  } catch (err) {
+    console.error("Compile resume error:", err);
+    return res.status(500).json({ error: "Failed to compile resume" });
+  }
+}
