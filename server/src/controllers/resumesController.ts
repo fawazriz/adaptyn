@@ -129,29 +129,52 @@ export async function deleteResume(req: Request, res: Response) {
 
 import { compileLatexToPdf } from "../lib/latex/compileLatex";
 import { generateResumeLatex } from "../lib/latex/generateResumeLatex";
+import fs from "fs/promises"
+import path from "path"
 
 export async function compileResume(req: Request, res: Response) {
-  try {
-    const { id } = req.params;
-    const userId = (req as AuthenticatedRequest).user.id;
+    try {
+        const { id } = req.params;
+        const userId = (req as AuthenticatedRequest).user.id;
 
-    const { data: resume, error } = await supabase
-      .from("resumes")
-      .select("*")
-      .eq("id", id)
-      .eq("user_id", userId)
-      .single();
+        const { data: resume, error } = await supabase
+            .from("resumes")
+            .select("*")
+            .eq("id", id)
+            .eq("user_id", userId)
+            .single();
 
-    if (error || !resume) {
-      return res.status(404).json({ error: "Resume not found" });
+        if (error || !resume) {
+            return res.status(404).json({ error: "Resume not found" });
+        }
+
+        const contentToCompile = req.body.content ?? resume.content
+        const latexSource = generateResumeLatex(contentToCompile);
+
+        console.log("Generated LaTeX length:", latexSource.length);
+
+        const pdfPath = await compileLatexToPdf(latexSource);
+
+        console.log("Generated PDF path:", pdfPath);
+
+        return res.sendFile(pdfPath, async (err) => {
+            const buildDir = path.dirname(pdfPath);
+
+            try {
+                await fs.rm(buildDir, { recursive: true, force: true });
+            } catch (cleanupError) {
+                console.error("Failed to clean up PDF build folder:", cleanupError);
+            }
+
+            if (err) {
+                console.error("Failed to send PDF:", err);
+            }
+        });
+    } catch (err) {
+        console.error("Compile resume error:", err);
+
+        return res.status(500).json({
+            error: err instanceof Error ? err.message : "Failed to compile resume",
+        });
     }
-
-    const latexSource = generateResumeLatex(resume.content);
-    const pdfPath = await compileLatexToPdf(latexSource);
-
-    return res.sendFile(pdfPath);
-  } catch (err) {
-    console.error("Compile resume error:", err);
-    return res.status(500).json({ error: "Failed to compile resume" });
-  }
 }

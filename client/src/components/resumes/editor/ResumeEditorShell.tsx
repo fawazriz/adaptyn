@@ -132,7 +132,11 @@ export function ResumeEditorShell({ resumeId }: { resumeId: string }) {
         `${process.env.NEXT_PUBLIC_API_URL}/api/resumes/${resumeId}/compile`,
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
           credentials: "include",
+          body: JSON.stringify({ content: resume }),
         }
       )
 

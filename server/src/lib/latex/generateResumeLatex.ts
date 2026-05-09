@@ -1,36 +1,56 @@
 type ResumeData = {
-  fullName: string;
-  email: string;
-  phone?: string;
-  location?: string;
-  linkedin?: string;
-  github?: string;
-  education?: {
+  id: string;
+
+  header: {
+    fullName: string;
+    email: string;
+    phone: string;
+    location: string;
+    linkedIn: string;
+    githubOrPortfolio: string;
+  };
+
+  education: {
+    id: string;
     school: string;
     degree: string;
     location?: string;
-    graduationDate?: string;
+    graduationDate: string;
+    gpa?: string;
     coursework?: string;
   }[];
-  skills?: {
-    languages?: string;
-    frameworks?: string;
-    databases?: string;
-    tools?: string;
-    concepts?: string;
-  };
-  experience?: {
-    title: string;
+
+  experience: {
+    id: string;
     company: string;
+    role: string;
+    dates: string;
     location?: string;
-    dates?: string;
     bullets: string[];
   }[];
-  projects?: {
-    name: string;
-    techStack?: string;
+
+  projects: {
+    id: string;
+    projectName: string;
+    techStack: string;
+    link?: string;
     bullets: string[];
   }[];
+
+  skills: {
+    languages: string[];
+    frameworks: string[];
+    databases: string[];
+    tools: string[];
+    concepts?: string[];
+    dataAnalytics?: string[];
+  };
+
+  metadata?: {
+    template?: string;
+    notes?: string;
+    targetRole?: string;
+  };
 };
 
 function escapeLatex(value: unknown = ""): string {
@@ -134,13 +154,13 @@ export function generateResumeLatex(resume: ResumeData): string {
 \\begin{document}
 
 \\begin{center}
-    \\textbf{\\Huge \\scshape ${escapeLatex(resume.fullName)}} \\\\ \\vspace{1pt}
+    \\textbf{\\Huge \\scshape ${escapeLatex(resume.header.fullName)}} \\\\ \\vspace{1pt}
     \\large
     ${[
-      resume.phone ? escapeLatex(resume.phone) : "",
-      resume.email ? `\\href{mailto:${resume.email}}{\\underline{${escapeLatex(resume.email)}}}` : "",
-      href(resume.linkedin, resume.linkedin),
-      href(resume.github, resume.github),
+      resume.header.phone ? escapeLatex(resume.header.phone) : "",
+      resume.header.email ? `\\href{mailto:${resume.header.email}}{\\underline{${escapeLatex(resume.header.email)}}}` : "",
+      href(resume.header.linkedIn, resume.header.linkedIn),
+      href(resume.header.githubOrPortfolio, resume.header.githubOrPortfolio),
     ]
       .filter(Boolean)
       .join(" $|$ ")}
@@ -198,7 +218,7 @@ ${resume.experience
   .map(
     (exp) => `
 \\resumeSubheading
-  {${escapeLatex(exp.title)}}{${escapeLatex(exp.dates ?? "")}}
+  {${escapeLatex(exp.role)}}{${escapeLatex(exp.dates ?? "")}}
   {${escapeLatex(exp.company)}}{${escapeLatex(exp.location ?? "")}}
   \\resumeItemListStart
     ${renderBullets(exp.bullets)}
@@ -220,7 +240,7 @@ ${resume.projects
   .map(
     (project) => `
 \\resumeProjectHeading
-  {\\textbf{${escapeLatex(project.name)}} ${
+  {\\textbf{${escapeLatex(project.projectName)}} ${
       project.techStack ? `$|$ \\emph{${escapeLatex(project.techStack)}}` : ""
     }}{}
   \\resumeItemListStart
