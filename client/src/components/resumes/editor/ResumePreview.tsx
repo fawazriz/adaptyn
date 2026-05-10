@@ -6,12 +6,37 @@ import type { ResumeData } from "@/components/resumes/editor/types"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { resume } from "react-dom/server"
 
 function formatLineParts(parts: Array<string | undefined | null>, sep = " • ") {
   return parts
     .map((p) => (p ?? "").trim())
     .filter(Boolean)
     .join(sep)
+}
+
+async function save(resumeId: string, content: ResumeData) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/resumes/${resumeId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        content,
+      }),
+    }
+  )
+
+  const data = await res.json()
+
+  if (!res.ok) {
+    throw new Error(data.error || "Failed to save resume")
+  }
+
+  return data
 }
 
 export function ResumePreview({
@@ -43,7 +68,7 @@ export function ResumePreview({
 
         <div className="flex items-center gap-2">
 
-          <Button size="sm" className="gap-2 bg-green-600 hover:bg-green-700">
+          <Button size="sm" className="gap-2 bg-green-600 hover:bg-green-700" onClick={() => save(value.id, value)}>
             <IconCheck size={16} />
             Save
           </Button>
