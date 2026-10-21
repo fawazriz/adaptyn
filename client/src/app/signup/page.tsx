@@ -60,7 +60,7 @@ export default function SignupPage() {
       // Go somewhere after signup
       document.cookie = `accessToken=${data.accessToken}; path=/; max-age=3600; SameSite=Lax`;
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch {
       setError("Failed to create account");
     } finally {
       setLoading(false);

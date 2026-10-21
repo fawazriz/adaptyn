@@ -63,6 +63,17 @@ const COLUMNS: ColumnConfig[] = [
   },
 ]
 
+interface ApiApplication {
+  id: string
+  company: string
+  role: string
+  status: ApplicationStatus
+  job_url: string | null
+  applied_date: string | null
+  salary_min: number | null
+  notes: string | null
+  created_at: string
+}
 
 // API call to fetch all applications for the current user. Called on initial load of the dashboard.
 export async function fetchApplications(): Promise<Application[]> {
@@ -78,15 +89,21 @@ export async function fetchApplications(): Promise<Application[]> {
     throw new Error("Failed to fetch applications");
   }
 
-  const data = await res.json();
+  const data = (await res.json()) as ApiApplication[];
 
   // Map backend field names to client-facing Application fields.
   // Server returns applied_date and job_url, while client uses dateApplied and url.
-  return data.map((app: any) => ({
-    ...app,
+  return data.map((app) => ({
+    id: app.id,
+    company: app.company,
+    role: app.role,
+    status: app.status,
     dateApplied: app.applied_date || "",
     url: app.job_url ?? "",
-  })) as Application[];
+    salary: app.salary_min ?? undefined,
+    note: app.notes ?? undefined,
+    lastActivity: app.created_at,
+  }));
 }
 
 // ─── Form helpers ─────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
   NavigationMenu,
@@ -81,17 +82,17 @@ export function Navbar() {
       <div className={`h-14 flex items-center justify-between gap-4 px-5 ${!isAuthPage ? "max-w-6xl mx-auto" : ""}`}>
         {/* Logo */}
         {isAuthPage ? (
-          <a
+          <Link
             href="/"
             className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
             aria-label="Back to home"
           >
             <IconHome size={16} />
-          </a>
+          </Link>
         ) : (
-          <a href="/" className="flex items-center gap-2 shrink-0">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             <span className="font-semibold text-foreground tracking-tight text-sm">Adaptyn</span>
-          </a>
+          </Link>
         )}
 
         {/* Desktop nav */}

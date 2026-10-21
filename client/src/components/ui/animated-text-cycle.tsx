@@ -1,12 +1,38 @@
-import * as React from "react";
+
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 interface AnimatedTextCycleProps {
   words: string[];
   interval?: number;
   className?: string;
 }
+
+const containerVariants: Variants = {
+  hidden: {
+    y: -20,
+    opacity: 0,
+    filter: "blur(8px)",
+  },
+  visible: {
+    y: 0,
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.4,
+      ease: "easeOut",
+    },
+  },
+  exit: {
+    y: 20,
+    opacity: 0,
+    filter: "blur(8px)",
+    transition: {
+      duration: 0.3,
+      ease: "easeIn",
+    },
+  },
+};
 
 export default function AnimatedTextCycle({
   words,
@@ -17,17 +43,22 @@ export default function AnimatedTextCycle({
   const [width, setWidth] = useState("auto");
   const measureRef = useRef<HTMLDivElement>(null);
 
+  const safeIndex = words.length > 0 ? currentIndex % words.length : 0;
+
   useEffect(() => {
     if (measureRef.current) {
       const elements = measureRef.current.children;
-      if (elements.length > currentIndex) {
-        const newWidth = elements[currentIndex].getBoundingClientRect().width;
+
+      if (elements.length > safeIndex) {
+        const newWidth = elements[safeIndex].getBoundingClientRect().width;
         setWidth(`${newWidth}px`);
       }
     }
-  }, [currentIndex]);
+  }, [safeIndex, words]);
 
   useEffect(() => {
+    if (words.length === 0) return;
+
     const timer = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % words.length);
     }, interval);
@@ -35,31 +66,7 @@ export default function AnimatedTextCycle({
     return () => clearInterval(timer);
   }, [interval, words.length]);
 
-  const containerVariants = {
-    hidden: {
-      y: -20,
-      opacity: 0,
-      filter: "blur(8px)",
-    },
-    visible: {
-      y: 0,
-      opacity: 1,
-      filter: "blur(0px)",
-      transition: {
-        duration: 0.4,
-        ease: "easeOut",
-      },
-    },
-    exit: {
-      y: 20,
-      opacity: 0,
-      filter: "blur(8px)",
-      transition: {
-        duration: 0.3,
-        ease: "easeIn",
-      },
-    },
-  };
+  if (words.length === 0) return null;
 
   return (
     <>
@@ -92,7 +99,7 @@ export default function AnimatedTextCycle({
       >
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
-            key={currentIndex}
+            key={safeIndex}
             className={`inline-block font-bold ${className}`}
             variants={containerVariants}
             initial="hidden"
@@ -100,7 +107,7 @@ export default function AnimatedTextCycle({
             exit="exit"
             style={{ whiteSpace: "nowrap" }}
           >
-            {words[currentIndex]}
+            {words[safeIndex]}
           </motion.span>
         </AnimatePresence>
       </motion.span>
