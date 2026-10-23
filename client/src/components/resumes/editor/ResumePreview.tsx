@@ -1,19 +1,10 @@
 "use client"
 
-import { useMemo } from "react"
 import { IconCheck, IconDownload, IconFileTypePdf, IconLoader2 } from "@tabler/icons-react"
 import type { ResumeData } from "@/components/resumes/editor/types"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { resume } from "react-dom/server"
-
-function formatLineParts(parts: Array<string | undefined | null>, sep = " • ") {
-  return parts
-    .map((p) => (p ?? "").trim())
-    .filter(Boolean)
-    .join(sep)
-}
 
 async function save(resumeId: string, content: ResumeData) {
   const res = await fetch(
@@ -50,13 +41,6 @@ export function ResumePreview({
   onCompile: () => void
   isCompiling: boolean
 }) {
-
-  const contactLine = useMemo(() => {
-    const emailPhone = formatLineParts([value.header.email, value.header.phone], " | ")
-    const location = value.header.location?.trim()
-    return formatLineParts([emailPhone, location], " | ")
-  }, [value.header.email, value.header.phone, value.header.location])
-
 
   return (
     <div className="sticky top-4 self-start space-y-3">
@@ -108,4 +92,3 @@ export function ResumePreview({
     </div>
   )
 }
-

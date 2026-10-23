@@ -2,7 +2,6 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
 import { FadeUp } from "@/components/shared/FadeUp"
 import { IconCheck } from "@tabler/icons-react"
 

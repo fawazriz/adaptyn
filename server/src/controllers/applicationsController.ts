@@ -107,15 +107,9 @@ export async function updateApplication(req: Request, res: Response) {
         job_url,
         status,
         applied_date,
-        salary_min,
-        salary_max,
-        location,
-        source,
-        resume_version_id,
-        notes,
     } = req.body;
 
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
     if (company) updates.company = company;
     if (role) updates.role = role;
     if (job_url) updates.job_url = job_url;
