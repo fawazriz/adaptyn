@@ -26,7 +26,7 @@ export async function updateMyProfile(req: Request, res: Response) {
     const id = (req as AuthenticatedRequest).user.id;
     const { name, headline, location, bio } = req.body;
 
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
     if (name) updates.name = name;
     if (headline) updates.headline = headline;
     if (location) updates.location = location;

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Navbar } from "@/components/shared/Navbar"
-import { IconArrowRight, IconBrandGoogle, IconCheck } from "@tabler/icons-react"
+import { IconArrowRight, IconCheck } from "@tabler/icons-react"
 
 const FEATURES = [
   "Kanban board for every application",

@@ -86,7 +86,7 @@ export async function updateResume(req: Request, res: Response) {
         status,
     } = req.body;
 
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
     if (name) updates.name = name;
     if (target_role) updates.target_role = target_role;
     if (content) updates.content = content;

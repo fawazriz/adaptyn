@@ -1,7 +1,6 @@
 "use client"
 
 import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { FadeUp } from "@/components/shared/FadeUp"
 import { IconGitCommit, IconTrendingUp, IconTrendingDown, IconMinus } from "@tabler/icons-react"

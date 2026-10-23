@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import type { ResumeData } from "@/components/resumes/editor/types"
 import { sampleResume } from "@/components/resumes/editor/sampleResumeData"
 import { Sidebar } from "@/components/dashboard/Sidebar"
@@ -98,33 +98,7 @@ export function ResumeEditorShell({ resumeId }: { resumeId: string }) {
   const [pdfUrl, setPdfUrl] = useState("")
   const [isCompiling, setIsCompiling] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
-
-    async function load() {
-      try {
-        const row = await fetchResumeById(resumeId)
-        const parsed = parseResumeData(row.content)
-        if (cancelled) return
-        if (parsed) {
-          setResume({ ...parsed, id: resumeId })
-        } else {
-          setResume(initial)
-        }
-      } catch {
-        if (cancelled) return
-        setResume(initial)
-      }
-    }
-
-    load()
-    compilePdf()
-    return () => {
-      cancelled = true
-    }
-  }, [resumeId, initial])
-
-  async function compilePdf() {
+  const compilePdf = useCallback(async () => {
     try {
       setIsCompiling(true)
 
@@ -154,7 +128,33 @@ export function ResumeEditorShell({ resumeId }: { resumeId: string }) {
     } finally {
       setIsCompiling(false)
     }
-  }
+  }, [resumeId, resume])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      try {
+        const row = await fetchResumeById(resumeId)
+        const parsed = parseResumeData(row.content)
+        if (cancelled) return
+        if (parsed) {
+          setResume({ ...parsed, id: resumeId })
+        } else {
+          setResume(initial)
+        }
+      } catch {
+        if (cancelled) return
+        setResume(initial)
+      }
+    }
+
+    load()
+    compilePdf()
+    return () => {
+      cancelled = true
+    }
+  }, [resumeId, initial, compilePdf])
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -191,4 +191,3 @@ export function ResumeEditorShell({ resumeId }: { resumeId: string }) {
     </div>
   )
 }
-

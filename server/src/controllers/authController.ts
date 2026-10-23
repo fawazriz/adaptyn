@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import supabase from "../db/supabase-client";
 
 export async function register(
-    req: Request<{}, any, { email: string; password: string; fullName: string }>,
+    req: Request<Record<string, never>, unknown, { email: string; password: string; fullName: string }>,
     res: Response
 ) {
     const { email, password, fullName } = req.body;
@@ -27,7 +27,7 @@ export async function register(
 }
 
 export async function login(
-    req: Request<{}, any, { email: string; password: string }>,
+    req: Request<Record<string, never>, unknown, { email: string; password: string }>,
     res: Response
 ) {
     const { email, password } = req.body;

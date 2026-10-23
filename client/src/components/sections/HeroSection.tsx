@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import AnimatedTextCycle from "@/components/ui/animated-text-cycle"
 import { FadeUp } from "@/components/shared/FadeUp"
 import {
