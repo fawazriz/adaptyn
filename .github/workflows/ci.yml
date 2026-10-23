@@ -31,6 +31,9 @@ jobs:
       - name: Lint client
         run: npm run lint
 
+      - name: Test client
+        run: npm run test
+
       - name: Build client
         run: npm run build
 
@@ -55,6 +58,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Lint server
+        run: npm run lint
+
+      - name: Test server
+        run: npm run test
 
       - name: Build server
         run: npm run build

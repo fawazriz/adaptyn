@@ -15,12 +15,16 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return res.status(401).json({ error: "Missing token" });
   }
 
-  const { data, error } = await supabase.auth.getUser(token);
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
 
-  if (error || !data.user) {
-    return res.status(401).json({ error: "Invalid token" });
+    if (error || !data.user) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    (req as AuthenticatedRequest).user = data.user;
+    next();
+  } catch (error) {
+    next(error);
   }
-
-  (req as AuthenticatedRequest).user = data.user;
-  next();
 }

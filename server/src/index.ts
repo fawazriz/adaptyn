@@ -1,37 +1,5 @@
-import express from 'express'
-import cors from 'cors'
-import morgan from 'morgan'
-import cookieParser from 'cookie-parser'
-import dotenv from 'dotenv'
-import authRouter from './routes/auth'
-import { requireAuth } from './middleware/auth'
-import applicationRouter from './routes/applications'
-import profilesRouter from './routes/profiles'
-import resumesRouter from './routes/resumes'
-
-dotenv.config()
-
-const app = express()
-const PORT = process.env.PORT || 3005
-
-app.use(morgan('dev'))
-app.use(express.json())
-app.use(cookieParser())
-app.use(
-  cors({
-    origin: process.env.FRONT_END_URL, // EXACT frontend URL
-    credentials: true,               // REQUIRED for cookies
-  })
-);
-
-app.use('/api/auth', authRouter)
-app.use('/api/applications', requireAuth, applicationRouter)
-app.use('/api/profiles', requireAuth, profilesRouter)
-app.use('/api/resumes', requireAuth, resumesRouter)
-
-app.get('/', (req, res) => {
-  res.send('Hello, world!')
-})
+import app from './app';
+const PORT = process.env.PORT || 3005;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

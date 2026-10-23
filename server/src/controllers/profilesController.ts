@@ -1,6 +1,7 @@
 import supabase from "../db/supabase-client";
 import { Request, Response } from "express";
-import { User } from "@supabase/auth-js/dist/module/lib/types";
+// import { User } from "@supabase/auth-js/dist/module/lib/types";
+import type { User } from "@supabase/supabase-js";
 
 interface AuthenticatedRequest extends Request {
     user: User;
@@ -36,6 +37,7 @@ export async function updateMyProfile(req: Request, res: Response) {
         .from("profiles")
         .update(updates)
         .eq("id", id)
+        .select("*")
         .maybeSingle();
 
     if (error) {
@@ -56,6 +58,7 @@ export async function deleteMyProfile(req: Request, res: Response) {
         .from("profiles")
         .delete()
         .eq("id", id)
+        .select("*")
         .maybeSingle();
 
     if (error) {
