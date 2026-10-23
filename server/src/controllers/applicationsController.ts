@@ -26,6 +26,7 @@ export async function getApplicationById(req: Request, res: Response) {
         .from("applications")
         .select("*")
         .eq("id", id)
+        .eq("user_id", (req as AuthenticatedRequest).user.id)
         .single();
 
     if (error) {
@@ -41,7 +42,8 @@ export async function getApplicationByCategory(req: Request, res: Response) {
     const { data, error } = await supabase
         .from("applications")
         .select("*")
-        .eq("category", category);
+        .eq("category", category)
+        .eq("user_id", (req as AuthenticatedRequest).user.id);
 
     if (error) {
         return res.status(500).json({ error: error.message });

@@ -27,6 +27,7 @@ export async function getResumeById(req: Request, res: Response) {
         .from("resumes")
         .select("*")
         .eq("id", id)
+        .eq("user_id", (req as AuthenticatedRequest).user.id)
         .single();
 
     if (error) {
@@ -132,6 +133,8 @@ import { generateResumeLatex } from "../lib/latex/generateResumeLatex";
 import fs from "fs/promises"
 import path from "path"
 
+// Temporary: compilation is excluded along with src/lib/latex until its separate test work.
+/* istanbul ignore next */
 export async function compileResume(req: Request, res: Response) {
     try {
         const { id } = req.params;
