@@ -2,6 +2,9 @@
 
 Adaptyn is a full-stack job application management platform designed to help users organize their job search, track applications, and manage resumes in one place.
 
+<img width="1552" height="922" alt="adaptynss" src="https://github.com/user-attachments/assets/b9c6733d-f0c0-4a52-99c6-207fa5c9c28e" />
+
+
 ## Current Features
 
 * Track and organize job applications
