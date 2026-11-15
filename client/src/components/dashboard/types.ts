@@ -13,12 +13,15 @@ export interface Application {
   company: string
   referenceNumber?: string
   role: string
+  location?: string
   workType?: WorkType
   salary?: number
   url: string
   dateApplied: string
   status: ApplicationStatus
   lastActivity: string
+  createdAt?: string
+  updatedAt?: string
   statusTag?: string
   note?: string
 }

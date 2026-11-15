@@ -3,6 +3,7 @@
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import type { ExperienceItem } from "@/components/resumes/editor/types"
 import { Button } from "@/components/ui/button"
+import { EntryOrder } from "./EntryOrder"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,8 +18,10 @@ function makeId() {
 export function ExperienceEditor({
   value,
   onChange,
+  errors = {},
 }: {
   value: ExperienceItem[]
+  errors?: Record<string, string>
   onChange: (next: ExperienceItem[]) => void
 }) {
   return (
@@ -63,16 +66,19 @@ export function ExperienceEditor({
               <CardContent className="space-y-4 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <h4 className="text-sm font-medium">Item {itemIndex + 1}</h4>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Remove experience"
-                    onClick={() => onChange(value.filter((x) => x.id !== item.id))}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <IconTrash size={16} />
-                  </Button>
+                  <div className="flex items-center">
+                    <EntryOrder entries={value} index={itemIndex} label={`experience ${itemIndex + 1}`} onChange={onChange} />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Remove experience"
+                      onClick={() => onChange(value.filter((x) => x.id !== item.id))}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <IconTrash size={16} />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -95,6 +101,8 @@ export function ExperienceEditor({
                     <Label htmlFor={`exp_${item.id}_role`}>Role</Label>
                     <Input
                       id={`exp_${item.id}_role`}
+                      aria-invalid={Boolean(errors[`exp_${item.id}_role`])}
+                      aria-describedby={errors[`exp_${item.id}_role`] ? `exp_${item.id}_role-error` : undefined}
                       value={item.role}
                       onChange={(e) =>
                         onChange(
@@ -105,6 +113,7 @@ export function ExperienceEditor({
                       }
                       placeholder="Software Engineer Intern"
                     />
+                    {errors[`exp_${item.id}_role`] && <small id={`exp_${item.id}_role-error`} className="text-destructive">{errors[`exp_${item.id}_role`]}</small>}
                   </div>
                 </div>
 
@@ -113,6 +122,8 @@ export function ExperienceEditor({
                     <Label htmlFor={`exp_${item.id}_dates`}>Dates</Label>
                     <Input
                       id={`exp_${item.id}_dates`}
+                      aria-invalid={Boolean(errors[`exp_${item.id}_dates`])}
+                      aria-describedby={errors[`exp_${item.id}_dates`] ? `exp_${item.id}_dates-error` : undefined}
                       value={item.dates}
                       onChange={(e) =>
                         onChange(
@@ -123,6 +134,7 @@ export function ExperienceEditor({
                       }
                       placeholder="Jun 2024 - Aug 2024"
                     />
+                    {errors[`exp_${item.id}_dates`] && <small id={`exp_${item.id}_dates-error`} className="text-destructive">{errors[`exp_${item.id}_dates`]}</small>}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor={`exp_${item.id}_location`}>Location</Label>

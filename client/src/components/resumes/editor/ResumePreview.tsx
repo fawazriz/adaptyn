@@ -1,94 +1,62 @@
 "use client"
 
-import { IconCheck, IconDownload, IconFileTypePdf, IconLoader2 } from "@tabler/icons-react"
-import type { ResumeData } from "@/components/resumes/editor/types"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { resumeTemplate } from "./resume-data"
+import { downloadPdf } from "../useResumePdf"
+import styles from "../resumes.module.css"
 
-async function save(resumeId: string, content: ResumeData) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/resumes/${resumeId}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        content,
-      }),
-    }
-  )
-
-  const data = await res.json()
-
-  if (!res.ok) {
-    throw new Error(data.error || "Failed to save resume")
-  }
-
-  return data
+type PreviewProps = {
+  name: string
+  url?: string
+  busy: boolean
+  error: string
+  stale?: boolean
+  onGenerate: () => void
 }
 
-export function ResumePreview({
-  value,
-  pdfUrl,
-  onCompile,
-  isCompiling,
-}: {
-  value: ResumeData
-  pdfUrl: string
-  onCompile: () => void
-  isCompiling: boolean
-}) {
-
+export function ResumePreview({ name, url, busy, error, stale, onGenerate }: PreviewProps) {
   return (
-    <div className="sticky top-4 self-start space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary">Live</Badge>
-          <p className="text-sm font-semibold">Preview</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-
-          <Button size="sm" className="gap-2 bg-green-600 hover:bg-green-700" onClick={() => save(value.id, value)}>
-            <IconCheck size={16} />
-            Save
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={onCompile}
-            disabled={isCompiling}
-            className="gap-2"
-          >
-            {isCompiling ? (
-              <IconLoader2 size={16} className="animate-spin" />
-            ) : (
-              <IconFileTypePdf size={16} />
-            )}
-            {isCompiling ? "Compiling..." : "Compile PDF"}
-          </Button>
-          <Button size="sm" disabled className="gap-2">
-            <IconDownload size={16} />
-            Download PDF
-          </Button>
-        </div>
+    <section className={styles.preview} aria-label="PDF preview" aria-busy={busy}>
+      <div className={styles.previewToolbar}>
+        <span>{resumeTemplate.name}</span>
+        {url && <a href={url} target="_blank" rel="noopener noreferrer">Open PDF in new tab</a>}
       </div>
-
-      {pdfUrl ? (
-        <iframe
-          src={pdfUrl}
-          className="h-[calc(100vh-150px)] w-full rounded-xl border bg-white"
-        />
+      {error && <p className={styles.error} role="alert">{error}</p>}
+      {busy && <p className={styles.previewStatus} role="status">Generating PDF…</p>}
+      {stale && !busy && <p className={styles.previewStatus}>Your edits aren’t in this preview yet.</p>}
+      {url ? (
+        <iframe title={`PDF preview of ${name}`} src={url} className={styles.pdf} />
       ) : (
-        <Card className="border-zinc-200 bg-white text-zinc-900 shadow-none dark:border-zinc-200 dark:bg-white dark:text-zinc-900">
-          <CardContent className="p-6">
-            {/* keep your existing HTML preview content here */}
-          </CardContent>
-        </Card>
+        <div className={styles.previewEmpty}>
+          <p>Generate a PDF to see the document and its page breaks.</p>
+          <button type="button" className={styles.secondary} onClick={onGenerate} disabled={busy}>{error ? "Retry preview" : "Generate preview"}</button>
+        </div>
       )}
-    </div>
+      {url && stale && <button type="button" className={styles.secondary} onClick={onGenerate} disabled={busy}>Refresh preview</button>}
+    </section>
+  )
+}
+
+export function ResumePreviewDialog({ open, onOpenChange, onEdit, ...preview }: PreviewProps & {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onEdit: React.ReactNode
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={`${styles.dialog} ${styles.previewDialog}`}>
+        <DialogHeader>
+          <DialogTitle>{preview.name}</DialogTitle>
+          <DialogDescription>Resume preview</DialogDescription>
+        </DialogHeader>
+        <div className={styles.actions}>
+          {onEdit}
+          <button type="button" className={styles.primary} disabled={!preview.url || preview.busy} onClick={() => {
+            if (preview.url) downloadPdf(preview.url, preview.name)
+          }}>Download PDF</button>
+        </div>
+        <ResumePreview {...preview} />
+      </DialogContent>
+    </Dialog>
   )
 }

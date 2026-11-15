@@ -1,14 +1,6 @@
-"use client";
+import { ResumeEditorShell } from "@/components/resumes/editor/ResumeEditorShell"
 
-import React from "react";
-import { ResumeEditorShell } from "@/components/resumes/editor/ResumeEditorShell";
-
-export default function ResumeEditorRoutePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = React.use(params);
-
-  return <ResumeEditorShell resumeId={id} />;
+export default async function ResumeEditorRoutePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  return <ResumeEditorShell key={id} resumeId={id} />
 }

@@ -1,6 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { IconLayoutKanban, IconListDetails, IconPlus } from "@tabler/icons-react"
+import { ApplicationList } from "./ApplicationList"
+import { DashboardOverview } from "./DashboardOverview"
+import styles from "./dashboard.module.css"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,52 +19,13 @@ import {
 import { ApplicationColumn, type ColumnConfig } from "./ApplicationColumn"
 import type { Application, ApplicationStatus, WorkType } from "./types"
 
-// ─── Column config ────────────────────────────────────────────────────────────
-
-// Define the order of application statuses for moving cards and displaying options
-const STATUS_ORDER: ApplicationStatus[] = [
-  'saved', 'applied', 'phone_screen', 'interview', 'offer', 'rejected'
-]
-
-
-// Column configuration for the application board. Each column corresponds to an application status.
 const COLUMNS: ColumnConfig[] = [
-  {
-    id: "saved",
-    label: "Saved",
-    dotColor: "bg-slate-400 dark:bg-slate-500",
-    labelColor: "text-slate-600 dark:text-slate-400",
-  },
-  {
-    id: "applied",
-    label: "Applied",
-    dotColor: "bg-green-500",
-    labelColor: "text-green-600 dark:text-green-400",
-  },
-  {
-    id: "phone_screen",
-    label: "Phone Screen",
-    dotColor: "bg-yellow-500",
-    labelColor: "text-yellow-600 dark:text-yellow-400",
-  },
-  {
-    id: "interview",
-    label: "Interview",
-    dotColor: "bg-violet-500",
-    labelColor: "text-violet-600 dark:text-violet-400",
-  },
-  {
-    id: "offer",
-    label: "Offer",
-    dotColor: "bg-emerald-500",
-    labelColor: "text-emerald-600 dark:text-emerald-400",
-  },
-  {
-    id: "rejected",
-    label: "Rejected",
-    dotColor: "bg-red-400",
-    labelColor: "text-red-600 dark:text-red-400",
-  },
+  { id: "saved", label: "Saved" },
+  { id: "applied", label: "Applied" },
+  { id: "phone_screen", label: "Phone screen" },
+  { id: "interview", label: "Interview" },
+  { id: "offer", label: "Offer" },
+  { id: "rejected", label: "Rejected" },
 ]
 
 interface ApiApplication {
@@ -69,41 +34,38 @@ interface ApiApplication {
   role: string
   status: ApplicationStatus
   job_url: string | null
+  location?: string | null
   applied_date: string | null
   salary_min: number | null
   notes: string | null
-  created_at: string
+  created_at: string | null
+  updated_at?: string | null
 }
 
-// API call to fetch all applications for the current user. Called on initial load of the dashboard.
-export async function fetchApplications(): Promise<Application[]> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/applications`,
-    {
-      method: "GET",
-      credentials: "include", // sends cookies automatically
-    }
-  );
+const applicationsUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/applications`
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch applications");
-  }
-
-  const data = (await res.json()) as ApiApplication[];
-
-  // Map backend field names to client-facing Application fields.
-  // Server returns applied_date and job_url, while client uses dateApplied and url.
-  return data.map((app) => ({
+function toApplication(app: ApiApplication): Application {
+  return {
     id: app.id,
     company: app.company,
     role: app.role,
     status: app.status,
-    dateApplied: app.applied_date || "",
+    dateApplied: app.applied_date ?? "",
     url: app.job_url ?? "",
+    location: app.location ?? undefined,
     salary: app.salary_min ?? undefined,
     note: app.notes ?? undefined,
-    lastActivity: app.created_at,
-  }));
+    createdAt: app.created_at ?? undefined,
+    updatedAt: app.updated_at ?? undefined,
+    lastActivity: app.updated_at ?? app.created_at ?? "",
+  }
+}
+
+async function fetchApplications(signal: AbortSignal): Promise<Application[]> {
+  const res = await fetch(applicationsUrl, { credentials: "include", signal })
+  if (!res.ok) throw new Error("Failed to fetch applications")
+  const data: ApiApplication[] = await res.json()
+  return data.map(toApplication)
 }
 
 // ─── Form helpers ─────────────────────────────────────────────────────────────
@@ -146,14 +108,16 @@ type FormState = typeof EMPTY_FORM
 function ApplicationForm({
   form,
   onChange,
+  dateRequired = true,
 }: {
   form: FormState
+  dateRequired?: boolean
   onChange: (patch: Partial<FormState>) => void
 }) {
   return (
     <div className="space-y-4 py-1">
       {/* Company + Reference # */}
-      <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+      <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_9rem] gap-3 items-end">
         <div className="space-y-1.5">
           <Label htmlFor="f-company">
             Company <span className="text-destructive">*</span>
@@ -163,10 +127,9 @@ function ApplicationForm({
             placeholder="Stripe"
             value={form.company}
             onChange={(e) => onChange({ company: e.target.value })}
-            autoFocus
           />
         </div>
-        <div className="space-y-1.5 w-36">
+        <div className="space-y-1.5 min-w-0">
           <Label htmlFor="f-ref" className="text-muted-foreground">
             Reference #
           </Label>
@@ -247,7 +210,7 @@ function ApplicationForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="f-date">
-            Date applied <span className="text-destructive">*</span>
+            Date applied {dateRequired && <span className="text-destructive">*</span>}
           </Label>
           <Input
             id="f-date"
@@ -266,9 +229,9 @@ function ApplicationForm({
             value={form.status}
             onChange={(e) => onChange({ status: e.target.value as ApplicationStatus })}
           >
-            {STATUS_ORDER.map((s) => (
-              <option key={s} value={s}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
+            {COLUMNS.map(({ id, label }) => (
+              <option key={id} value={id}>
+                {label}
               </option>
             ))}
           </select>
@@ -279,28 +242,15 @@ function ApplicationForm({
 }
 
 
-/*
-  * isFormValid
-  * Utility function to check if the required fields in the form are filled out.
-  * Used to enable/disable the "Add" and "Save changes" buttons in the dialogs.
-  * Currently checks that company, role, and date applied are not empty.
-  * 
-  * @param form - The current state of the form to validate
-  * @returns boolean indicating whether the form is valid or not
-
-*/
-function isFormValid(form: FormState) {
-  return (
-    form.company.trim() !== "" &&
-    form.role.trim() !== "" &&
-    form.dateApplied !== ""
-  )
+function isFormValid(form: FormState, dateRequired = true) {
+  return Boolean(form.company.trim() && form.role.trim() && (!dateRequired || form.dateApplied))
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 // Props for the ApplicationBoard component, which manages the state and interactions for the main application board. This includes the open state of the add dialog, the default status for new applications, and callbacks for opening the add dialog from columns.
 interface Props {
+  showApplications: boolean
   addOpen: boolean
   addDefaultStatus: ApplicationStatus
   onAddOpenChange: (open: boolean) => void
@@ -308,70 +258,102 @@ interface Props {
 }
 
 export function ApplicationBoard({
+  showApplications,
   addOpen,
   addDefaultStatus,
   onAddOpenChange,
   onColumnAddClick,
 }: Props) {
+  const [view, setView] = useState<"board" | "list">("board")
   const [applications, setApplications] = useState<Application[]>([])
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading")
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [hiddenIds, setHiddenIds] = useState<string[]>([])
   const [addForm, setAddForm] = useState<FormState>(EMPTY_FORM)
-
-  const [editOpen, setEditOpen] = useState(false)
   const [editingApp, setEditingApp] = useState<Application | null>(null)
   const [editForm, setEditForm] = useState<FormState>(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+  const [dialogError, setDialogError] = useState("")
+  const [boardError, setBoardError] = useState("")
+  const savingRef = useRef(false)
+  const dialogTrigger = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
-    fetchApplications().then(setApplications).catch(console.error)
-  }, [])
+    const controller = new AbortController()
+    fetchApplications(controller.signal).then((records) => {
+      if (controller.signal.aborted) return
+      setApplications(records)
+      setLoadState("ready")
+    }).catch(() => {
+      if (!controller.signal.aborted) setLoadState("error")
+    })
+    return () => controller.abort()
+  }, [loadAttempt])
 
   useEffect(() => {
     if (addOpen) {
+      setDialogError("")
       setAddForm({ ...EMPTY_FORM, status: addDefaultStatus, dateApplied: today() })
     }
   }, [addOpen, addDefaultStatus])
 
-  async function handleAdd() {
-    if (!isFormValid(addForm)) return;
+  function retry() {
+    setLoadState("loading")
+    setLoadAttempt((attempt) => attempt + 1)
+  }
 
+  async function saveApplication(
+    payload: Record<string, unknown>,
+    id?: string,
+  ) {
+    if (loadState !== "ready" || savingRef.current) return false
+    savingRef.current = true
+    setSaving(true)
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/applications`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include", // important for cookies
-          body: JSON.stringify({
-            company: addForm.company.trim(),
-            role: addForm.role.trim(),
-            job_url: addForm.url.trim() || null,
-            status: addForm.status,
-            applied_date: addForm.dateApplied || null,
-            salary_min: addForm.salary ? Number(addForm.salary) : null,
-            // add other fields if needed
-          }),
-        }
-      );
+      const res = await fetch(id ? `${applicationsUrl}/${encodeURIComponent(id)}` : applicationsUrl, {
+        method: id ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      })
 
-      const data = await res.json();
+      if (!res.ok) return false
+      const app = toApplication(await res.json())
+      setApplications((records) => id
+        ? records.map((record) => record.id === id ? app : record)
+        : [...records, app])
+      return true
+    } catch {
+      return false
+    } finally {
+      savingRef.current = false
+      setSaving(false)
+    }
+  }
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to create application");
-      }
-
-      // ✅ update state with backend response
-      setApplications((prev) => [...prev, data]);
-
-      onAddOpenChange(false);
-    } catch (err) {
-      console.error(err);
-      // optionally show UI error
+  async function saveForm(form: FormState, id?: string) {
+    if (!isFormValid(form, !id) || savingRef.current) return
+    setDialogError("")
+    const saved = await saveApplication({
+      company: form.company.trim(),
+      role: form.role.trim(),
+      job_url: form.url.trim() || null,
+      status: form.status,
+      applied_date: form.dateApplied || null,
+      salary_min: form.salary ? Number(form.salary) : null,
+    }, id)
+    if (!saved) {
+      setDialogError(id ? "Couldn’t save your changes. Try again." : "Couldn’t add this application. Try again.")
+    } else if (id) {
+      setEditingApp(null)
+    } else {
+      onAddOpenChange(false)
     }
   }
 
   function handleEdit(app: Application) {
-    setEditingApp(app)
+    if (savingRef.current) return
+    setDialogError("")
     setEditForm({
       company: app.company,
       referenceNumber: app.referenceNumber ?? "",
@@ -382,148 +364,105 @@ export function ApplicationBoard({
       dateApplied: app.dateApplied,
       status: app.status,
     })
-    setEditOpen(true)
-  }
-
-  async function handleSaveEdit() {
-    if (!editingApp || !isFormValid(editForm)) return;
-
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/applications/${editingApp.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            company: editForm.company.trim(),
-            role: editForm.role.trim(),
-            job_url: editForm.url.trim() || null,
-            status: editForm.status,
-            applied_date: editForm.dateApplied || null,
-            salary_min: editForm.salary ? Number(editForm.salary) : null,
-            // include other fields if needed
-          }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to update application");
-      }
-
-      // ✅ update local state with backend response
-      setApplications((prev) =>
-        prev.map((a) => (a.id === editingApp.id ? data : a))
-      );
-
-      setEditOpen(false);
-      setEditingApp(null);
-    } catch (err) {
-      console.error(err);
-    }
+    setEditingApp(app)
   }
 
   async function handleMoveNext(id: string) {
-    const app = applications.find((app) => app.id === id)
-    if (!app) return
+    const app = applications.find((record) => record.id === id)
+    if (!app || savingRef.current) return
+    const index = COLUMNS.findIndex(({ id }) => id === app.status)
+    const status = COLUMNS[index + 1]?.id
+    if (index < 0 || !status) return
 
-    const idx = STATUS_ORDER.indexOf(app.status)
-    if (idx >= STATUS_ORDER.length - 1) return
-
-    const nextStatus = STATUS_ORDER[idx + 1]
-
-    setApplications((prev) =>
-      prev.map((app) => {
-        if (app.id !== id) return app
-        return { ...app, status: nextStatus, lastActivity: "Just now" }
-      })
-    )
-
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/applications/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            status: nextStatus,
-          }),
-        }
-      );
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to update application status");
-      }
-
-    } catch (err) {
-      console.error("Failed to persist status update", err)
+    setBoardError("")
+    if (!await saveApplication({ status }, id)) {
+      setBoardError("Couldn’t move this application. Try again.")
     }
   }
 
-  function handleArchive(id: string) {
-    setApplications((prev) => prev.filter((a) => a.id !== id))
+  function rememberTrigger() {
+    dialogTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
   }
 
-  const followUps = applications.filter((a) => {
-    if (!a || !a.statusTag) return false;
-    return a.statusTag.toLowerCase().includes("follow");
-  }).length;
+  function restoreFocus(event: Event) {
+    if (!dialogTrigger.current?.isConnected) return
+    event.preventDefault()
+    dialogTrigger.current.focus()
+  }
 
-  const interviews = applications.filter((a) => {
-    if (!a) return false;
-    return a.status === "interview";
-  }).length;
+  const visibleApplications = applications.filter(({ id }) => !hiddenIds.includes(id))
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-      {/* Board */}
-      <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
-        <div className="flex gap-3 p-5 h-full min-w-max">
-          {COLUMNS.map((col) => (
-            <ApplicationColumn
-              key={col.id}
-              config={col}
-              cards={applications.filter((a) => {
-                if (!a) return false;
-                return a.status === col.id;
-              })}
-              onAddClick={() => onColumnAddClick(col.id)}
-              onMoveNext={handleMoveNext}
-              onEdit={handleEdit}
-              onArchive={handleArchive}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Status bar */}
-      <div className="shrink-0 h-9 border-t border-border bg-muted/20 px-5 flex items-center justify-between">
-        <div className="flex items-center gap-5 text-xs text-muted-foreground">
-          <span>{applications.length} applications tracked</span>
-          {followUps > 0 && (
-            <span className="text-amber-600 dark:text-amber-400">
-              {followUps} follow-up{followUps > 1 ? "s" : ""} due
-            </span>
-          )}
-          {interviews > 0 && (
-            <span className="text-violet-600 dark:text-violet-400">
-              {interviews} interview{interviews > 1 ? "s" : ""} active
-            </span>
-          )}
-        </div>
-      </div>
+    <>
+      {showApplications ? (
+        <main id="applications" className={styles.surface}>
+          <div className={styles.content}>
+            <header className={styles.heading}>
+              <div className={styles.applicationsTitle}>
+                <h1>{view === "board" ? "Kanban board" : "Applications list"}</h1>
+                {loadState === "ready" && (
+                  <p>{visibleApplications.length} {visibleApplications.length === 1 ? "application" : "applications"}</p>
+                )}
+              </div>
+              <button type="button" className={styles.primary} onClick={() => onColumnAddClick("applied")} disabled={loadState !== "ready" || saving}>
+                <IconPlus size={17} aria-hidden="true" /> Add application
+              </button>
+            </header>
+            <div className={styles.viewSwitch} role="group" aria-label="Applications view">
+              <button type="button" aria-pressed={view === "board"} onClick={() => setView("board")}>
+                <IconLayoutKanban size={16} aria-hidden="true" /> Kanban
+              </button>
+              <button type="button" aria-pressed={view === "list"} onClick={() => setView("list")}>
+                <IconListDetails size={16} aria-hidden="true" /> List
+              </button>
+            </div>
+            {boardError && <p role="alert" className={styles.notice}>{boardError}</p>}
+            {loadState === "error" && (
+              <div className={styles.notice}>
+                <p role="alert">Couldn’t load your applications.</p>
+                <button type="button" className={styles.textLink} onClick={retry}>Retry</button>
+              </div>
+            )}
+            {loadState === "loading" && <p role="status">Loading applications…</p>}
+            {loadState === "ready" && view === "board" && (
+              <div className={styles.boardScroll} role="region" aria-label="Application board" tabIndex={0}>
+                {COLUMNS.map((column) => (
+                  <ApplicationColumn
+                    key={column.id}
+                    config={column}
+                    cards={visibleApplications.filter(({ status }) => status === column.id)}
+                    onAddClick={() => {
+                      if (!savingRef.current) onColumnAddClick(column.id)
+                    }}
+                    onMoveNext={handleMoveNext}
+                    onEdit={handleEdit}
+                    onArchive={(id) => setHiddenIds((ids) => [...ids, id])}
+                  />
+                ))}
+              </div>
+            )}
+            {loadState === "ready" && view === "list" && (
+              <ApplicationList applications={visibleApplications} stages={COLUMNS} onReview={handleEdit} />
+            )}
+          </div>
+        </main>
+      ) : (
+        <DashboardOverview
+          applications={applications}
+          state={loadState}
+          onAdd={() => {
+            if (!savingRef.current) onColumnAddClick("applied")
+          }}
+          onReview={handleEdit}
+          onRetry={retry}
+        />
+      )}
 
       {/* ── Add Dialog ── */}
-      <Dialog open={addOpen} onOpenChange={onAddOpenChange}>
-        <DialogContent className="sm:max-w-lg">
+      <Dialog open={addOpen} onOpenChange={(open) => {
+        if (!savingRef.current) onAddOpenChange(open)
+      }}>
+        <DialogContent className={styles.dialog} onOpenAutoFocus={rememberTrigger} onCloseAutoFocus={restoreFocus}>
           <DialogHeader>
             <DialogTitle>Add application</DialogTitle>
             <DialogDescription>
@@ -535,24 +474,27 @@ export function ApplicationBoard({
             form={addForm}
             onChange={(patch) => setAddForm((f) => ({ ...f, ...patch }))}
           />
+          {dialogError && <p role="alert" className={styles.dialogError}>{dialogError}</p>}
           <DialogFooter>
-            <Button variant="outline" onClick={() => onAddOpenChange(false)}>
+            <Button variant="outline" disabled={saving} onClick={() => onAddOpenChange(false)}>
               Cancel
             </Button>
             <Button
-              onClick={handleAdd}
-              disabled={!isFormValid(addForm)}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => saveForm(addForm)}
+              disabled={saving || !isFormValid(addForm)}
+              className={styles.primary}
             >
-              Add application
+              {saving ? "Adding…" : "Add application"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* ── Edit Dialog ── */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-lg">
+      <Dialog open={Boolean(editingApp)} onOpenChange={(open) => {
+        if (!open && !savingRef.current) setEditingApp(null)
+      }}>
+        <DialogContent className={styles.dialog} onOpenAutoFocus={rememberTrigger} onCloseAutoFocus={restoreFocus}>
           <DialogHeader>
             <DialogTitle>Edit application</DialogTitle>
             <DialogDescription>
@@ -562,22 +504,32 @@ export function ApplicationBoard({
           </DialogHeader>
           <ApplicationForm
             form={editForm}
+            dateRequired={false}
             onChange={(patch) => setEditForm((f) => ({ ...f, ...patch }))}
           />
+          {editingApp?.note && (
+            <div className={styles.applicationNote}>
+              <strong>Application notes</strong>
+              <p>{editingApp.note}</p>
+            </div>
+          )}
+          {dialogError && <p role="alert" className={styles.dialogError}>{dialogError}</p>}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>
+            <Button variant="outline" disabled={saving} onClick={() => setEditingApp(null)}>
               Cancel
             </Button>
             <Button
-              onClick={handleSaveEdit}
-              disabled={!isFormValid(editForm)}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => {
+                if (editingApp) void saveForm(editForm, editingApp.id)
+              }}
+              disabled={saving || !isFormValid(editForm, false)}
+              className={styles.primary}
             >
-              Save changes
+              {saving ? "Saving…" : "Save changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }

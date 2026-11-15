@@ -1,150 +1,101 @@
 "use client"
 
 import Link from "next/link"
-import { IconCalendarClock, IconDotsVertical, IconUsers } from "@tabler/icons-react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
-import type { ResumeStatus, ResumeVersion } from "@/components/resumes/types"
+import { useState } from "react"
+import { IconDots, IconFileText, IconSearch } from "@tabler/icons-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { resumePath, type ResumeApiRow } from "@/lib/resume"
+import type { LinkedApplication } from "./ResumeDetailPanel"
+import { resumeDate, resumeTemplate } from "./editor/resume-data"
+import styles from "./resumes.module.css"
 
-interface ResumeLibraryProps {
-  resumes: ResumeVersion[]
-  selectedResumeId: string
-  onSelectResume: (resumeId: string) => void
-}
+export type ResumeAction = "preview" | "duplicate" | "rename" | "delete" | "details" | "archive"
 
-const statusStyles: Record<ResumeStatus, string> = {
-  active: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  archived: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
-  draft: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-}
+export function ResumeLibrary({ resumes, applications, exporting, pdfBusy, onAction, onDownload }: {
+  resumes: ResumeApiRow[]
+  applications: LinkedApplication[] | null
+  exporting: string | null
+  pdfBusy: boolean
+  onAction: (action: ResumeAction, resume: ResumeApiRow) => void
+  onDownload: (resume: ResumeApiRow) => void
+}) {
+  const [query, setQuery] = useState("")
+  const [sort, setSort] = useState("recent")
+  const visible = resumes.filter(({ name }) => name.toLowerCase().includes(query.trim().toLowerCase()))
+  visible.sort((a, b) => sort === "name"
+    ? a.name.localeCompare(b.name)
+    : (Date.parse(b.updated_at ?? b.created_at ?? "") || 0) - (Date.parse(a.updated_at ?? a.created_at ?? "") || 0))
 
-export function ResumeLibrary({
-  resumes,
-  selectedResumeId,
-  onSelectResume,
-}: ResumeLibraryProps) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">Resume library</h2>
-        <p className="text-xs text-muted-foreground">{resumes.length} versions tracked</p>
+    <section aria-label="Resume library">
+      <div className={styles.toolbar}>
+        <label className={styles.search}>
+          <span className="sr-only">Search resumes</span><IconSearch size={16} aria-hidden="true" />
+          <input type="search" placeholder="Search by resume name" value={query} onChange={(event) => setQuery(event.target.value)} />
+        </label>
+        <label className={styles.sort}>Sort by
+          <select value={sort} onChange={(event) => setSort(event.target.value)}>
+            <option value="recent">Last modified</option>
+            <option value="name">Name</option>
+          </select>
+        </label>
+        <span className={styles.count} role="status">{visible.length} {visible.length === 1 ? "resume" : "resumes"}</span>
       </div>
-
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        {Array.isArray(resumes) && resumes.map((resume) => (
-          <Link
-            key={resume.id}
-            href={`/dashboard/resumes/${resume.id}`}
-            className="block"
-            onMouseEnter={() => onSelectResume(resume.id)}
-            onFocus={() => onSelectResume(resume.id)}
-          >
-            <Card
-              className={cn(
-                "border border-border/70 transition-colors hover:border-primary/40",
-                selectedResumeId === resume.id && "border-primary/70 bg-primary/5"
-              )}
-            >
-              <CardHeader className="pb-0">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-base">{resume.name}</CardTitle>
-                    <CardDescription className="mt-1 text-xs">
-                      {resume.targetRole} • {resume.version}
-                    </CardDescription>
-                  </div>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={(event) => {
-                          event.preventDefault()
-                          event.stopPropagation()
-                        }}
-                        aria-label="Resume actions"
-                      >
-                        <IconDotsVertical size={16} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem
-                        onSelect={(event) => {
-                          event.preventDefault()
-                          event.stopPropagation()
-                        }}
-                      >
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onSelect={(event) => {
-                          event.preventDefault()
-                          event.stopPropagation()
-                        }}
-                      >
-                        Duplicate
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onSelect={(event) => {
-                          event.preventDefault()
-                          event.stopPropagation()
-                        }}
-                      >
-                        Archive
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onSelect={(event) => {
-                          event.preventDefault()
-                          event.stopPropagation()
-                        }}
-                      >
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <IconCalendarClock size={14} />
-                    Updated {resume.updatedAt}
-                  </span>
-                  <Badge
-                    className={cn("capitalize", statusStyles[resume.status])}
-                  >
-                    {resume.status}
-                  </Badge>
-                </div>
-
-                <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                  <IconUsers size={14} />
-                  {resume.applicationsCount} applications using this version
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    </div>
+      {visible.length === 0 ? (
+        <div className={styles.empty}>
+          <p>No resumes match your search.</p>
+          <button type="button" className={styles.secondary} onClick={() => { setQuery(""); setSort("recent") }}>Clear filters</button>
+        </div>
+      ) : (
+        <div className={styles.tableWrap} role="region" aria-label="Resume records" tabIndex={0}>
+          <table>
+            <thead><tr><th scope="col">Resume</th><th scope="col">Template</th><th scope="col">Last modified</th><th scope="col">Applications</th><th scope="col">Actions</th></tr></thead>
+            <tbody>
+              {visible.map((resume) => {
+                const linked = applications?.filter((application) => application.resume_version_id === resume.id)
+                const status = resume.status === "active" || resume.status === "archived" ? resume.status : "draft"
+                return (
+                  <tr key={resume.id}>
+                    <th scope="row">
+                      <div className={styles.document}>
+                        <IconFileText size={21} aria-hidden="true" />
+                        <div>
+                          <Link href={resumePath(resume.id)}>{resume.name}</Link>
+                          <div className={styles.documentMeta}>
+                            <span className={styles.recordStatus} data-status={status}>{status}</span>
+                            {resume.target_role && <span>{resume.target_role}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </th>
+                    <td>{resumeTemplate.name}</td>
+                    <td className={styles.date}>{resumeDate(resume.updated_at ?? resume.created_at)}</td>
+                    <td>{linked?.length === 1 ? linked[0].company : linked?.length ? `${linked.length} linked` : "—"}</td>
+                    <td>
+                      <div className={styles.rowActions}>
+                        <Link href={resumePath(resume.id)} aria-label={`Edit ${resume.name}`}>Edit</Link>
+                        <button type="button" onClick={() => onAction("preview", resume)} aria-label={`Preview ${resume.name}`} disabled={pdfBusy || Boolean(exporting)}>Preview</button>
+                        <button type="button" disabled={pdfBusy || Boolean(exporting)} onClick={() => onDownload(resume)} aria-label={`Download PDF for ${resume.name}`}>{exporting === resume.id ? "Generating…" : "Download PDF"}</button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild><button type="button" className={styles.iconButton} aria-label={`More actions for ${resume.name}`}><IconDots size={17} aria-hidden="true" /></button></DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className={styles.menu}>
+                            <DropdownMenuItem onSelect={() => onAction("rename", resume)}>Rename</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => onAction("duplicate", resume)}>Duplicate</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => onAction("details", resume)}>Version details</DropdownMenuItem>
+                            {status !== "archived" && <DropdownMenuItem onSelect={() => onAction("archive", resume)}>Archive</DropdownMenuItem>}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem variant="destructive" onSelect={() => onAction("delete", resume)}>Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   )
 }

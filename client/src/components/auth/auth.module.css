@@ -1,0 +1,286 @@
+.page {
+  --chalk: #eff0ec;
+  --card: #ffffff;
+  --ink: #121212;
+  --burgundy: #6a1b34;
+  --citron: #d7e04a;
+  --blush: #f3d9dc;
+  --graphite: #5c5f5b;
+  --hairline: #d3d5ce;
+  --success: #2f7a55;
+  --error: #c62b3a;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100svh;
+  background: var(--card);
+  color: var(--ink);
+  color-scheme: light;
+  font-family: var(--font-sans, sans-serif);
+}
+
+.page :is(a, input, button):focus-visible {
+  outline: 2px solid var(--burgundy);
+  outline-offset: 3px;
+}
+
+.formSide {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding-inline: clamp(32px, 5vw, 80px);
+}
+
+.brand {
+  padding-block: 25px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.formContent {
+  align-self: center;
+  width: min(100%, 424px);
+  margin-inline: auto;
+  padding-block: 40px 52px;
+}
+
+.title {
+  font-family: var(--font-auth-serif), Georgia, serif;
+  font-size: clamp(46px, 5vw, 72px);
+  font-weight: 400;
+  line-height: 0.96;
+  letter-spacing: -0.025em;
+}
+
+.description,
+.panelDescription {
+  margin-top: 14px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.description,
+.accountPrompt {
+  color: var(--graphite);
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.field {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.nameFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field .input {
+  display: block;
+  height: 46px;
+  padding-inline: 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 16px;
+  box-shadow: none;
+}
+
+.field .input:hover {
+  border-color: var(--graphite);
+}
+
+.field .input[aria-invalid="true"] {
+  border-color: var(--error);
+}
+
+.password {
+  position: relative;
+}
+
+.password .input {
+  padding-right: 66px;
+}
+
+.reveal {
+  position: absolute;
+  inset-block: 1px;
+  right: 1px;
+  min-width: 57px;
+  padding-inline: 10px;
+  border-radius: 5px;
+  color: var(--burgundy);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reveal:hover {
+  background: var(--chalk);
+}
+
+.reveal:focus-visible {
+  outline-offset: -4px !important;
+}
+
+.submit {
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 1px solid var(--burgundy);
+  border-radius: 6px;
+  background: var(--burgundy);
+  color: var(--card);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submit:hover:enabled {
+  background: color-mix(in srgb, var(--burgundy), var(--ink) 24%);
+}
+
+.submit:disabled {
+  opacity: 0.72;
+  cursor: wait;
+}
+
+.fieldError,
+.error {
+  color: var(--error);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.error {
+  padding: 10px 12px;
+  border-left: 2px solid var(--error);
+  background: var(--chalk);
+}
+
+.accountPrompt {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+  font-size: 14px;
+}
+
+.accountPrompt a,
+.confirmation a {
+  color: var(--burgundy);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.accountPrompt a:hover,
+.confirmation a:hover {
+  color: var(--ink);
+}
+
+.confirmation {
+  margin-top: 26px;
+  padding: 16px 18px;
+  border: 1px solid var(--hairline);
+  border-left: 2px solid var(--success);
+  border-radius: 6px;
+  background: var(--chalk);
+  font-size: 15px;
+}
+
+.confirmation h2 {
+  font-weight: 600;
+}
+
+.confirmation p {
+  margin-block: 5px 12px;
+  color: var(--graphite);
+}
+
+.panel {
+  display: grid;
+  align-items: center;
+  padding: clamp(36px, 6vw, 96px);
+  background: var(--burgundy);
+  color: var(--card);
+}
+
+.panelContent {
+  width: min(100%, 490px);
+  margin-inline: auto;
+}
+
+.panel .title {
+  font-size: clamp(54px, 5.8vw, 88px);
+}
+
+.panel .title em,
+.panelDescription {
+  color: var(--blush);
+}
+
+.panelDescription {
+  max-width: 39ch;
+}
+
+.features {
+  margin-top: 35px;
+  list-style: none;
+}
+
+.features li {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 10px;
+  padding-block: 13px;
+  border-top: 1px solid color-mix(in srgb, var(--blush) 36%, transparent);
+}
+
+.featureMark {
+  width: 9px;
+  height: 1px;
+  margin-top: 12px;
+  background: var(--blush);
+}
+
+.features li:first-child .featureMark {
+  background: var(--citron);
+}
+
+.features strong {
+  font-weight: 600;
+}
+
+.features p {
+  margin-top: 3px;
+  color: var(--blush);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 860px) {
+  .page {
+    display: block;
+  }
+
+  .formSide {
+    padding-inline: clamp(20px, 5vw, 40px);
+  }
+
+  .brand {
+    padding-block: 19px;
+  }
+
+  .formContent {
+    padding-block: 42px;
+  }
+
+  .panel {
+    display: none;
+  }
+}
