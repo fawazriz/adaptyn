@@ -18,7 +18,7 @@ const instrumentSerif = Instrument_Serif({
 })
 
 export const metadata: Metadata = {
-  title: "Adaptyn — Job Application Tracker and Resume Builder",
+  title: "Adaptyn",
   description: "Track job applications, organize resume versions, and build PDF resumes in one free job search workspace.",
 }
 

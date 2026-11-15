@@ -19,6 +19,8 @@ export interface Application {
   dateApplied: string
   status: ApplicationStatus
   lastActivity: string
+  createdAt?: string
+  updatedAt?: string
   statusTag?: string
   note?: string
 }

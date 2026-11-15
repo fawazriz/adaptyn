@@ -1,9 +1,11 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   IconLayoutKanban,
+  IconLayoutDashboard,
   IconFileText,
   IconChartBar,
   IconUsersGroup,
@@ -16,6 +18,7 @@ import { Separator } from "@/components/ui/separator"
 import { useState, useEffect } from "react"
 import { fetchProfile, intiialsFromProfile } from "@/lib/profile"
 import { Profile } from "./types"
+import styles from "./dashboard.module.css"
 
 
 const NAV_ITEMS = [
@@ -25,6 +28,12 @@ const NAV_ITEMS = [
   { icon: IconUsersGroup, label: "Recruiters", href: "/dashboard/recruiters" },
 ] as const
 
+const DASHBOARD_ITEMS = [
+  { icon: IconLayoutDashboard, label: "Dashboard", href: "#overview" },
+  { icon: IconLayoutKanban, label: "Applications", href: "#applications" },
+  NAV_ITEMS[1],
+] as const
+
 const BOTTOM_ITEMS = [
   { icon: IconSettings, label: "Settings", href: "/dashboard/settings" },
 ] as const
@@ -32,9 +41,10 @@ const BOTTOM_ITEMS = [
 interface Props {
   collapsed: boolean
   onToggle: () => void
+  dashboardView?: "overview" | "applications"
 }
 
-export function Sidebar({ collapsed, onToggle }: Props) {
+export function Sidebar({ collapsed, onToggle, dashboardView }: Props) {
   const pathname = usePathname()
   const [profile, setProfile] = useState<Profile | null>(null)
 
@@ -46,30 +56,37 @@ export function Sidebar({ collapsed, onToggle }: Props) {
     <aside
       className={cn(
         "flex flex-col h-screen border-r border-border bg-card shrink-0 transition-all duration-200 overflow-hidden",
-        collapsed ? "w-14" : "w-56"
+        collapsed ? "w-14" : "w-56",
+        dashboardView && styles.sidebar
       )}
     >
       {/* Logo */}
       <div
         className={cn(
           "flex items-center h-14 border-b border-border shrink-0 px-4 gap-2.5",
-          collapsed && "justify-center px-0"
+          collapsed && "justify-center px-0",
+          dashboardView && styles.sidebarBrand
         )}
       >
-        <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
-          <span className="text-primary-foreground text-[11px] font-bold">A</span>
-        </div>
-        {!collapsed && (
-          <span className="font-semibold text-sm text-foreground tracking-tight">Adaptyn</span>
+        {dashboardView ? (
+          <Image src="/adaptyn-logo.svg" width={28} height={28} alt="" />
+        ) : (
+          <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
+            <span className="text-primary-foreground text-[11px] font-bold">A</span>
+          </div>
+        )}
+        {(!collapsed || dashboardView) && (
+          <span className={cn("font-semibold text-sm text-foreground tracking-tight", collapsed && (dashboardView ? styles.collapsedLabel : "sr-only"))}>Adaptyn</span>
         )}
       </div>
 
       {/* Primary nav */}
-      <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-3 space-y-0.5">
-        {NAV_ITEMS.map(({ icon: Icon, label, href }) => {
-          const active = pathname === href
+      <nav aria-label="Workspace" className={cn("flex-1 min-h-0 overflow-y-auto px-2 py-3 space-y-0.5", dashboardView && styles.sidebarNav)}>
+        {(dashboardView ? DASHBOARD_ITEMS : NAV_ITEMS).map(({ icon: Icon, label, href }) => {
+          const active = dashboardView ? href === `#${dashboardView}` : pathname === href
+          const NavLink = href.startsWith("#") ? "a" : Link
           return (
-            <Link
+            <NavLink
               key={label}
               href={href}
               className={cn(
@@ -80,19 +97,21 @@ export function Sidebar({ collapsed, onToggle }: Props) {
                 collapsed && "justify-center px-0 w-full"
               )}
               title={collapsed ? label : undefined}
+              aria-label={collapsed ? label : undefined}
+              aria-current={active ? "page" : undefined}
             >
-              <Icon size={15} className="shrink-0" />
-              {!collapsed && label}
-            </Link>
+              <Icon size={15} className="shrink-0" aria-hidden="true" />
+              <span className={cn(collapsed && (dashboardView ? styles.collapsedLabel : "sr-only"))}>{label}</span>
+            </NavLink>
           )
         })}
       </nav>
 
       {/* Bottom section */}
-      <div className="shrink-0 px-2 pb-3 space-y-0.5">
+      <div className={cn("shrink-0 px-2 pb-3 space-y-0.5", dashboardView && styles.sidebarAccount)}>
         <Separator className="mb-2" />
 
-        {BOTTOM_ITEMS.map(({ icon: Icon, label, href }) => {
+        {!dashboardView && BOTTOM_ITEMS.map(({ icon: Icon, label, href }) => {
           const active = pathname === href
           return (
             <Link
@@ -116,12 +135,12 @@ export function Sidebar({ collapsed, onToggle }: Props) {
         {/* User row */}
         {!collapsed && (
           <div className="flex items-center gap-2.5 px-2.5 py-2 mt-1">
-            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <div className={cn("w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0", dashboardView && styles.sidebarInitials)}>
               <span className="text-[9px] font-semibold text-primary">{intiialsFromProfile(profile)}</span>
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-foreground truncate">{profile?.full_name || "Profile"}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{profile?.email || "email@example.com"}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{profile?.email || (dashboardView ? "" : "email@example.com")}</p>
             </div>
           </div>
         )}

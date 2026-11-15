@@ -16,9 +16,10 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Adaptyn — The Job Hunting OS for Engineers",
-  description:
-    "Kanban application tracker, visual LaTeX resume editor, version-controlled resumes with response-rate analytics, and an AI recruiter finder — all in one platform for CS students and new grads.",
+  title: "Adaptyn",
+  icons: {
+    icon: "/adaptyn-logo.svg",
+  },
 }
 
 export default function RootLayout({
