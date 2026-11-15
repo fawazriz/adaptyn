@@ -1,84 +1,37 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
-import type { ResumeVersion } from "@/components/resumes/types"
+import type { ResumeApiRow } from "@/lib/resume"
+import { resumeDate, resumeTemplate } from "./editor/resume-data"
+import styles from "./resumes.module.css"
 
-interface ResumeDetailPanelProps {
-  resume: ResumeVersion
-}
+export type LinkedApplication = { id: string; company: string; role: string; resume_version_id?: string | null }
 
-export function ResumeDetailPanel({ resume }: ResumeDetailPanelProps) {
+export function ResumeDetailPanel({ resume, applications }: {
+  resume: ResumeApiRow
+  applications: LinkedApplication[] | null
+}) {
+  const linked = applications?.filter((application) => application.resume_version_id === resume.id)
+  const content = resume.content as { metadata?: { notes?: string }; notes?: string } | null
+  const notes = content?.metadata?.notes ?? content?.notes
+
   return (
-    <Card className="h-fit border border-border/70">
-      <CardHeader className="pb-0">
-        <CardTitle className="text-sm">Selected resume details</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="rounded-lg border border-border bg-muted/20 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-medium">{resume.name}</p>
-            <span className="text-xs text-muted-foreground">{resume.version}</span>
-          </div>
-        </div>
-
-        <Tabs defaultValue="history" className="w-full">
-          <TabsList variant="line">
-            <TabsTrigger value="history">Version history</TabsTrigger>
-            <TabsTrigger value="applications">Linked applications</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="history" className="space-y-3">
-            {resume.versionHistory.map((historyItem) => (
-              <div key={historyItem.id} className="rounded-md border border-border/60 p-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-foreground">{historyItem.version}</span>
-                  <span className="text-muted-foreground">{historyItem.updatedAt}</span>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">{historyItem.summary}</p>
-              </div>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="applications" className="space-y-3">
-            {resume.linkedApplications.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                No linked applications for this version yet.
-              </p>
-            ) : (
-              resume.linkedApplications.map((application, index) => (
-                <div key={application.id}>
-                  <div className="flex items-center justify-between text-xs">
-                    <div>
-                      <p className="font-medium text-foreground">{application.company}</p>
-                      <p className="text-muted-foreground">{application.role}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-foreground">{application.stage}</p>
-                      <p className="text-muted-foreground">{application.appliedAt}</p>
-                    </div>
-                  </div>
-                  {index < resume.linkedApplications.length - 1 && (
-                    <Separator className="mt-3" />
-                  )}
-                </div>
-              ))
-            )}
-          </TabsContent>
-
-          <TabsContent value="notes">
-            <p className="text-xs leading-5 text-muted-foreground">{resume.notes}</p>
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex items-center justify-end">
-          <Button asChild>
-            <Link href={`/dashboard/resumes/${resume.id}`}>Open editor</Link>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div className={styles.details}>
+      <dl>
+        <dt>Template</dt><dd>{resumeTemplate.name}</dd>
+        <dt>Created</dt><dd>{resumeDate(resume.created_at)}</dd>
+        <dt>Last modified</dt><dd>{resumeDate(resume.updated_at ?? resume.created_at)}</dd>
+      </dl>
+      <section>
+        <h3>Linked applications</h3>
+        {linked?.length ? (
+          <ul>{linked.map(({ id, company, role }) => <li key={id}>{company} · {role}</li>)}</ul>
+        ) : (
+          <p>{linked ? "No applications are linked to this resume." : "Linked applications are unavailable."}</p>
+        )}
+      </section>
+      {typeof notes === "string" && notes.trim() && <section><h3>Notes</h3><p className={styles.notes}>{notes}</p></section>}
+      <section>
+        <h3>Version history</h3>
+        <p>This resume has no stored revisions. Duplicate it to keep a separate copy before making changes.</p>
+      </section>
+    </div>
   )
 }

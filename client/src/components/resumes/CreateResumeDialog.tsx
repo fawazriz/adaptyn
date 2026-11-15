@@ -1,130 +1,89 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { createResume } from "@/lib/resume"
-import { sampleResume } from "@/components/resumes/editor/sampleResumeData"
+import { useRef, useState, type FormEvent } from "react"
+import { IconPlus } from "@tabler/icons-react"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { createResume, resumePath } from "@/lib/resume"
+import { blankResume, resumeTemplate } from "./editor/resume-data"
+import { ResumeTemplate } from "./ResumeTemplate"
+import styles from "./resumes.module.css"
 
-export function CreateResumeDialog() {
+export function CreateResumeDialog({ label = "New resume" }: { label?: string }) {
   const router = useRouter()
-
-  const [name, setName] = useState("")
-  const [targetRole, setTargetRole] = useState("")
-  const [notes, setNotes] = useState("")
+  const pending = useRef(false)
   const [open, setOpen] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
+  const [mode, setMode] = useState<"create" | "import">("create")
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState("")
 
-  const DEFAULT_TEMPLATE = "jake";
-
-  const isDisabled =
-    name.trim() === "" || targetRole.trim() === "" || isCreating
-
-  async function handleCreate() {
-    setIsCreating(true)
+  async function handleCreate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (pending.current) return
+    const fields = new FormData(event.currentTarget)
+    const name = String(fields.get("name") ?? "").trim()
+    const targetRole = String(fields.get("targetRole") ?? "").trim()
+    const notes = String(fields.get("notes") ?? "").trim()
+    if (!name) {
+      setError("Enter a resume name.")
+      return
+    }
+    pending.current = true
+    setBusy(true)
+    setError("")
     try {
-      const content = {
-        ...sampleResume,
-        header: {
-          ...sampleResume.header,
-          fullName: name.trim(),
+      const resume = await createResume({
+        name,
+        target_role: targetRole,
+        content: {
+          ...blankResume(),
+          metadata: { template: resumeTemplate.id, notes, targetRole },
         },
-        metadata: {
-          template: DEFAULT_TEMPLATE,
-          notes: notes.trim(),
-          targetRole: targetRole.trim(),
-        },
-      };
-
-      const newResume = await createResume({
-        name: name.trim(),
-        target_role: targetRole.trim(),
-        content,
-        latex_source: null,
-        pdf_url: null,
-        status: "draft",
-      });
-
-      router.push(`/dashboard/resumes/${newResume.id}`)
-    } finally {
-      setIsCreating(false)
+      })
       setOpen(false)
+      router.push(resumePath(resume.id))
+    } catch {
+      setError("Couldn’t create the resume. Try again.")
+    } finally {
+      pending.current = false
+      setBusy(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(next) => {
+      if (pending.current) return
+      setOpen(next)
+      if (next) { setError(""); setMode("create") }
+    }}>
       <DialogTrigger asChild>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-          Create resume
-        </Button>
+        <button type="button" className={styles.primary}><IconPlus size={17} aria-hidden="true" />{label}</button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className={styles.dialog}>
         <DialogHeader>
-          <DialogTitle>Create resume version</DialogTitle>
-          <DialogDescription>
-            Add a resume record now. API upload handling can replace this mock flow later.
-          </DialogDescription>
+          <DialogTitle>New resume</DialogTitle>
+          <DialogDescription>Choose how to start.</DialogDescription>
         </DialogHeader>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="resume-name" className="text-sm font-medium text-foreground">
-              Resume name
-            </label>
-            <Input
-              id="resume-name"
-              placeholder="Software Intern Resume"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="target-role" className="text-sm font-medium text-foreground">
-              Target role
-            </label>
-            <Input
-              id="target-role"
-              placeholder="Software Engineer Intern"
-              value={targetRole}
-              onChange={(event) => setTargetRole(event.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="resume-notes" className="text-sm font-medium text-foreground">
-              Notes
-            </label>
-            <Textarea
-              id="resume-notes"
-              placeholder="Any context for this resume version?"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-            />
-          </div>
+        <div className={styles.switch} role="group" aria-label="Resume starting point">
+          <button type="button" aria-pressed={mode === "create"} disabled={busy} onClick={() => setMode("create")}>Create a resume</button>
+          <button type="button" aria-pressed={mode === "import"} disabled={busy} onClick={() => setMode("import")}>Import a resume</button>
         </div>
-
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
-          <Button disabled={isDisabled} onClick={handleCreate}>
-            {isCreating ? "Creating…" : "Create"}
-          </Button>
-        </DialogFooter>
+        <form className={styles.form} onSubmit={handleCreate} hidden={mode !== "create"}>
+          <label>Resume name<input name="name" placeholder="Software engineer resume" required /></label>
+          <label>Target role <span>(optional)</span><input name="targetRole" placeholder="Software engineer" /></label>
+          <label>Notes <span>(optional)</span><textarea name="notes" rows={2} /></label>
+          <ResumeTemplate />
+          {error && <p className={styles.error} role="alert">{error}</p>}
+          <DialogFooter>
+            <button type="submit" className={styles.primary} disabled={busy}>{busy ? "Creating…" : "Create and edit"}</button>
+          </DialogFooter>
+        </form>
+        {mode === "import" && (
+          <div className={styles.notice}>
+            <strong>Import is unavailable.</strong>
+            <p>PDF and DOCX upload and parsing aren’t supported. You can create a blank resume and copy your details into the editor.</p>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )

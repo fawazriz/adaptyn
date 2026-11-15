@@ -3,6 +3,7 @@
 import { IconLink, IconPlus, IconTrash } from "@tabler/icons-react"
 import type { ProjectItem } from "@/components/resumes/editor/types"
 import { Button } from "@/components/ui/button"
+import { EntryOrder } from "./EntryOrder"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,8 +18,10 @@ function makeId() {
 export function ProjectsEditor({
   value,
   onChange,
+  errors = {},
 }: {
   value: ProjectItem[]
+  errors?: Record<string, string>
   onChange: (next: ProjectItem[]) => void
 }) {
   return (
@@ -62,16 +65,19 @@ export function ProjectsEditor({
               <CardContent className="space-y-4 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <h4 className="text-sm font-medium">Item {itemIndex + 1}</h4>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Remove project"
-                    onClick={() => onChange(value.filter((x) => x.id !== item.id))}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <IconTrash size={16} />
-                  </Button>
+                  <div className="flex items-center">
+                    <EntryOrder entries={value} index={itemIndex} label={`project ${itemIndex + 1}`} onChange={onChange} />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Remove project"
+                      onClick={() => onChange(value.filter((x) => x.id !== item.id))}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <IconTrash size={16} />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -79,6 +85,8 @@ export function ProjectsEditor({
                     <Label htmlFor={`proj_${item.id}_name`}>Project name</Label>
                     <Input
                       id={`proj_${item.id}_name`}
+                      aria-invalid={Boolean(errors[`proj_${item.id}_name`])}
+                      aria-describedby={errors[`proj_${item.id}_name`] ? `proj_${item.id}_name-error` : undefined}
                       value={item.projectName}
                       onChange={(e) =>
                         onChange(
@@ -91,6 +99,7 @@ export function ProjectsEditor({
                       }
                       placeholder="Resume Builder"
                     />
+                    {errors[`proj_${item.id}_name`] && <small id={`proj_${item.id}_name-error`} className="text-destructive">{errors[`proj_${item.id}_name`]}</small>}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor={`proj_${item.id}_stack`}>Tech stack</Label>
@@ -116,6 +125,8 @@ export function ProjectsEditor({
                   <div className="flex items-center gap-2">
                     <Input
                       id={`proj_${item.id}_link`}
+                      aria-invalid={Boolean(errors[`proj_${item.id}_link`])}
+                      aria-describedby={errors[`proj_${item.id}_link`] ? `proj_${item.id}_link-error` : undefined}
                       value={item.link ?? ""}
                       onChange={(e) =>
                         onChange(
@@ -132,6 +143,9 @@ export function ProjectsEditor({
                   </div>
                 </div>
 
+                {errors[`proj_${item.id}_link`] && (
+                  <p id={`proj_${item.id}_link-error`} className="text-sm text-destructive">{errors[`proj_${item.id}_link`]}</p>
+                )}
                 <Separator />
 
                 <div className="space-y-2">

@@ -82,7 +82,7 @@ export function Sidebar({ collapsed, onToggle, dashboardStyle }: Props) {
       {/* Primary nav */}
       <nav aria-label="Workspace" className={cn("flex-1 min-h-0 overflow-y-auto px-2 py-3 space-y-0.5", dashboardStyle && styles.sidebarNav)}>
         {(dashboardStyle ? DASHBOARD_ITEMS : NAV_ITEMS).map(({ icon: Icon, label, href }) => {
-          const active = pathname === href
+          const active = pathname === href || (href === "/dashboard/resumes" && pathname.startsWith(`${href}/`))
           return (
             <Link
               key={label}

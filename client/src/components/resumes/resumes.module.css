@@ -1,0 +1,674 @@
+.workspace,
+.dialog,
+.menu {
+  --chalk: #eff0ec;
+  --card: #fff;
+  --ink: #121212;
+  --burgundy: #6a1b34;
+  --citron: #d7e04a;
+  --blush: #f3d9dc;
+  --graphite: #5c5f5b;
+  --hairline: #d3d5ce;
+  --slate: #3e5c76;
+  --success: #2f7a55;
+  --warning: #c98a00;
+  --error: #c62b3a;
+  --destructive: var(--error);
+  --muted-foreground: var(--graphite);
+  --border: var(--hairline);
+
+  color: var(--ink);
+  color-scheme: light;
+  font-family: var(--font-sans, sans-serif);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+}
+
+.library,
+.editor {
+  width: min(100%, 1380px);
+  margin-inline: auto;
+  padding: 32px clamp(22px, 3.4vw, 48px) 44px;
+}
+
+.heading,
+.editorHeading,
+.actions,
+.toolbar,
+.rowActions,
+.previewToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.heading,
+.editorHeading,
+.previewToolbar {
+  justify-content: space-between;
+}
+
+.heading {
+  margin-bottom: 24px;
+}
+
+.heading h1,
+.empty h2 {
+  font-family: var(--font-resume-serif), Georgia, serif;
+  letter-spacing: -0.025em;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.heading h1 {
+  font-size: clamp(47px, 5vw, 66px);
+}
+
+.heading p {
+  margin-top: 6px;
+  color: var(--graphite);
+  font-size: 15px;
+}
+
+.primary,
+.secondary,
+.destructive,
+.iconButton,
+.switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: start;
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--burgundy);
+  color: var(--card);
+}
+
+.primary:hover:enabled,
+.destructive:hover:enabled {
+  filter: brightness(0.85);
+}
+
+.secondary {
+  border-color: var(--hairline);
+  background: var(--card);
+  color: var(--ink);
+}
+
+.secondary:hover,
+.iconButton:hover {
+  border-color: var(--burgundy);
+  color: var(--burgundy);
+}
+
+.destructive {
+  background: var(--error);
+  color: var(--card);
+}
+
+.workspace button:disabled,
+.dialog button:disabled {
+  opacity: 0.62;
+  cursor: default;
+}
+
+.workspace :is(input, select, textarea, button, a, summary):focus-visible,
+.dialog :is(input, select, textarea, button, a):focus-visible,
+.menu [data-highlighted] {
+  outline: 2px solid var(--burgundy);
+  outline-offset: 2px;
+}
+
+.toolbar {
+  margin-bottom: 13px;
+}
+
+.search {
+  position: relative;
+  width: min(100%, 295px);
+}
+
+.search svg {
+  position: absolute;
+  inset: 50% auto auto 12px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--graphite);
+}
+
+.workspace :is(input, select, textarea),
+.dialog :is(input, select, textarea) {
+  min-width: 0;
+  min-height: 40px;
+  padding: 7px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.search input {
+  width: 100%;
+  padding-inline-start: 35px;
+}
+
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.count {
+  margin-left: auto;
+  color: var(--graphite);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tableWrap,
+.empty,
+.formPanel,
+.preview {
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--card);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.tableWrap table {
+  width: 100%;
+  min-width: 790px;
+  font-size: 14px;
+  text-align: start;
+}
+
+.tableWrap :is(th, td) {
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--hairline);
+  text-align: start;
+}
+
+.tableWrap thead {
+  background: var(--chalk);
+  color: var(--graphite);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.tableWrap tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.document {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-width: 155px;
+  overflow-wrap: anywhere;
+}
+
+.document svg {
+  flex: none;
+  color: var(--burgundy);
+}
+
+.document a {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.documentMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 9px;
+  margin-top: 3px;
+  color: var(--graphite);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.recordStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-transform: capitalize;
+}
+
+.recordStatus::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--graphite);
+  content: "";
+}
+
+.recordStatus[data-status="active"]::before { background: var(--success); }
+.recordStatus[data-status="draft"]::before { background: var(--warning); }
+
+.date,
+.details dd {
+  font-variant-numeric: tabular-nums;
+}
+
+.date {
+  white-space: nowrap;
+}
+
+.rowActions {
+  flex-wrap: nowrap;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.rowActions :is(a, button),
+.previewToolbar a,
+.back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  color: var(--burgundy);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rowActions :is(a, button):hover,
+.document a:hover,
+.previewToolbar a:hover,
+.back:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rowActions .iconButton {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-color: var(--hairline);
+}
+
+.empty {
+  display: grid;
+  gap: 11px;
+  justify-items: start;
+  padding: 25px;
+  color: var(--graphite);
+}
+
+.empty h2 {
+  color: var(--ink);
+  font-size: 36px;
+}
+
+.error {
+  color: var(--error);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.library > .error,
+.editorHeader > .error {
+  margin-top: 9px;
+}
+
+.dialog,
+.menu {
+  --popover: var(--card);
+  --popover-foreground: var(--ink);
+  --accent: var(--chalk);
+  --accent-foreground: var(--ink);
+
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--card);
+  box-shadow: none;
+}
+
+.dialog {
+  gap: 15px;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  padding: 22px;
+}
+
+:global([data-slot="dialog-overlay"]):has(+ .dialog) {
+  backdrop-filter: none;
+}
+
+.form:not([hidden]),
+.form label {
+  display: grid;
+  gap: 8px;
+}
+
+.form:not([hidden]) {
+  gap: 12px;
+}
+
+.form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form label span,
+.muted,
+.notice p,
+.template p,
+.saveStatus {
+  color: var(--graphite);
+}
+
+.form label > :is(input, textarea) {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+.notice,
+.template {
+  padding: 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--chalk);
+}
+
+.notice p,
+.template p {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.template {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.templatePaper {
+  display: grid;
+  flex: 0 0 56px;
+  gap: 4px;
+  padding: 8px 7px;
+  border: 1px solid var(--hairline);
+  background: var(--card);
+}
+
+.templatePaper i {
+  height: 1px;
+  background: var(--graphite);
+}
+
+.templatePaper i:nth-child(odd) { width: 75%; }
+.templatePaper i:first-child { width: 53%; margin: 0 auto 3px; background: var(--ink); }
+
+.selected {
+  display: inline-block;
+  margin-top: 5px;
+  border-bottom: 2px solid var(--citron);
+  color: var(--burgundy);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.details {
+  display: grid;
+  gap: 14px;
+  font-size: 14px;
+}
+
+.details dl {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 5px;
+}
+
+.details h3,
+.details dt {
+  font-weight: 600;
+}
+
+.details section {
+  padding-top: 9px;
+  border-top: 1px solid var(--hairline);
+}
+
+.details p {
+  margin-top: 4px;
+  color: var(--graphite);
+}
+
+.notes { white-space: pre-wrap; }
+
+.editor {
+  padding-top: 14px;
+}
+
+.editorHeader {
+  margin-bottom: 16px;
+}
+
+.back {
+  gap: 7px;
+  margin-bottom: 7px;
+  font-size: 13px;
+}
+
+.editorName {
+  flex: 1 1 270px;
+  min-width: 0;
+}
+
+.editorName label {
+  display: block;
+  color: var(--graphite);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.editorName input {
+  width: min(100%, 425px);
+  margin: 3px 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.editorName .error {
+  display: block;
+}
+
+.saveStatus {
+  font-size: 13px;
+}
+
+.actions {
+  gap: 7px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+  align-items: start;
+  gap: 14px;
+}
+
+.formPanel details + details {
+  border-top: 1px solid var(--hairline);
+}
+
+.formPanel summary {
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.formPanel summary span {
+  margin-left: 4px;
+  color: var(--graphite);
+  font-size: 12px;
+}
+
+.formPanel summary:hover {
+  color: var(--burgundy);
+}
+
+.fieldSection {
+  padding: 0 14px 14px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.contactFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.workspace [aria-invalid="true"] {
+  border-color: var(--error);
+}
+
+.formPanel [data-slot="card"] {
+  gap: 0;
+  padding-block: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--card);
+  box-shadow: none;
+}
+
+.previewPane {
+  position: sticky;
+  top: 12px;
+  min-width: 0;
+}
+
+.previewToolbar {
+  padding: 8px 13px;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--graphite);
+  font-size: 13px;
+}
+
+.preview > :is(.error, .previewStatus) {
+  padding: 8px 12px;
+}
+
+.previewStatus {
+  color: var(--graphite);
+  font-size: 13px;
+}
+
+.preview > button {
+  margin: 8px 12px;
+}
+
+.previewEmpty {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 13px;
+  min-height: 285px;
+  padding: 18px;
+  color: var(--graphite);
+  font-size: 14px;
+  text-align: center;
+}
+
+.pdf {
+  display: block;
+  width: 100%;
+  height: max(420px, calc(100dvh - 230px));
+  border: 0;
+  background: var(--chalk);
+}
+
+.dialog.previewDialog {
+  width: calc(100% - 24px);
+  max-width: 900px;
+}
+
+.previewDialog .pdf {
+  height: max(300px, calc(100dvh - 205px));
+}
+
+.switch {
+  display: inline-flex;
+  justify-self: start;
+  gap: 3px;
+  width: fit-content;
+  padding: 3px;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--chalk);
+}
+
+.switch button {
+  color: var(--graphite);
+}
+
+.switch button[aria-pressed="true"] {
+  background: var(--card);
+  color: var(--burgundy);
+}
+
+.mobileSwitch { display: none; }
+
+@media (max-width: 980px) {
+  .mobileSwitch {
+    display: inline-flex;
+    margin-bottom: 12px;
+  }
+
+  .split {
+    display: block;
+  }
+
+  .previewPane { position: static; }
+  .split[data-pane="edit"] .previewPane,
+  .split[data-pane="preview"] .fieldsPane { display: none; }
+}
+
+@media (max-width: 580px) {
+  .library,
+  .editor { padding: 18px 15px 28px; }
+  .contactFields { grid-template-columns: 1fr; }
+  .count { margin-left: 0; }
+  .workspace :is(input, select, textarea),
+  .dialog :is(input, select, textarea) { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog,
+  .menu { animation: none; }
+}
