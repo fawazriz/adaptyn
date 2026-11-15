@@ -1,138 +1,99 @@
 # Adaptyn
 
-Adaptyn is a full-stack job application management platform designed to help users organize their job search, track applications, and manage resumes in one place.
+Adaptyn is a job search workspace for tracking applications and managing resume versions. See which applications need attention, organize roles in a Kanban board or searchable list, and build resumes you can preview and download as PDFs.
 
-<img width="1552" height="922" alt="adaptynss" src="https://github.com/user-attachments/assets/b9c6733d-f0c0-4a52-99c6-207fa5c9c28e" />
+<img width="1468" height="767" alt="revamp_ss_adaptyn" src="https://github.com/user-attachments/assets/c7670680-1fef-4ce9-af96-fbf2dda9a60f" />
 
 
-## Current Features
+## Features
 
-* Track and organize job applications
-* Manage application information through a centralized interface
-* Create and manage resume content
-* Generate resumes as PDFs
-* Reusable frontend components for the application dashboard and resume workflows
-* REST API for user, application, and resume data
+- **Dashboard** — See application totals, interviews, offers, and suggested next steps based on each application’s current stage.
+- **Application tracker** — Switch between Kanban and List views, search by role, company, or location, and filter by stage.
+- **Resume library** — Create blank resumes, search and sort saved records, and rename, duplicate, archive, or delete them.
+- **Resume editor** — Edit contact information, work experience, education, projects, and technical skills. Reorder experience and project entries and save changes explicitly.
+- **PDF preview and download** — Generate a preview or download a PDF using the built-in Classic LaTeX template.
+- **Accounts** — Sign up and sign in with Supabase Auth. The API scopes application and resume records to the signed-in user.
 
 ## Tech Stack
 
-**Frontend**
-
-* Next.js
-* React
-* TypeScript
-
-**Backend**
-
-* Node.js
-* Express
-* REST APIs
-
-**Database**
-
-* PostgreSQL
-
-**Other**
-
-* Docker
-* PDF generation
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js, React, TypeScript, Tailwind CSS |
+| Backend | Node.js, Express, REST API |
+| Database and authentication | Supabase PostgreSQL and Supabase Auth |
+| PDF generation | LaTeX and `latexmk`, run in Docker |
+| Testing | Jest, React Testing Library, Supertest |
 
 ## Getting Started
 
-### Prerequisites
+### 1. Clone the repository and install dependencies
 
-Make sure you have the following installed:
-
-* Node.js
-* npm
-* PostgreSQL
-* Docker
-* Git
-
-### 1. Clone the Repository
+You’ll need Git, Node.js 24 with npm, and a Supabase project. Install and start Docker if you want to preview or download resume PDFs locally.
 
 ```bash
 git clone https://github.com/fawazriz/adaptyn.git
 cd adaptyn
+npm --prefix client ci
+npm --prefix server ci
 ```
 
-### 2. Install Dependencies
+### 2. Configure environment variables
 
-Install the frontend dependencies:
-
-```bash
-cd frontend
-npm install
-```
-
-Install the backend dependencies:
-
-```bash
-cd ../backend
-npm install
-```
-
-### 3. Configure Environment Variables
-
-Create a `.env` file in the backend directory and add the required environment variables.
+Create `server/.env`:
 
 ```env
-DATABASE_URL=your_postgresql_connection_string
+PORT=8000
+FRONT_END_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 ```
 
-Do not commit your `.env` file or database credentials to Git.
+Create `client/.env.local`:
 
-### 4. Set Up the Database
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-Make sure PostgreSQL is running and create a database for Adaptyn.
+Use the same hostname in both local URLs so browser requests can carry the session cookie. Keep local environment files out of Git.
 
-Update the `DATABASE_URL` in your `.env` file with the credentials for your local PostgreSQL database.
+### 3. Set up Supabase
 
-### 5. Start the Backend
+In your Supabase project’s SQL Editor, run the files in `server/src/db/migrations` in order from `001` through `004`. They create the profiles, applications, and resumes tables and install the trigger that creates a profile when a user signs up.
 
-From the backend directory:
+### 4. Start both servers
+
+From the repository root, start the API:
 
 ```bash
-npm run dev
+npm --prefix server run dev
 ```
 
-### 6. Start the Frontend
-
-Open another terminal and run:
+In a second terminal, start the frontend:
 
 ```bash
-cd frontend
-npm run dev
+npm --prefix client run dev
 ```
 
-### 7. Open Adaptyn
+Open Adaptyn locally. Keep Docker running while using PDF preview or export. The Express server invokes the LaTeX container during PDF generation.
 
-Once both servers are running, open:
+## Architecture
 
 ```text
-http://localhost:3000
+Next.js client
+    │
+    │ REST API with session cookie
+    ▼
+Express API
+    ├── Supabase Auth
+    ├── Supabase PostgreSQL
+    └── Docker / LaTeX → PDF
 ```
 
-## Current Architecture
-
-```text
-Next.js / React
-       |
-       | REST API
-       v
-Node.js / Express
-       |
-       v
-  PostgreSQL
-```
-
-The frontend is built with Next.js, React, and TypeScript. It communicates with an Express backend through REST APIs, while PostgreSQL is used for persistent application and resume data.
+The client calculates dashboard counts from the signed-in user’s application records. Express verifies the session, scopes data requests to that user, and handles PDF compilation.
 
 ## Project Status
 
-Adaptyn is currently under active development. The core full-stack architecture, application tracking functionality, resume organization, and PDF generation have been implemented.
-
-Additional functionality will be added as development continues.
+Adaptyn is under active development. Application tracking, dashboard summaries, resume editing, and LaTeX PDF export are implemented. Resume versions are managed as separate saved copies. The landing page includes an interactive AI tailoring demo. Editable PDF and DOCX import, revision history, and calendar scheduling are currently unavailable.
 
 ## Author
 
