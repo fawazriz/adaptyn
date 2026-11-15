@@ -1,8 +1,9 @@
 import "@testing-library/jest-dom"
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import DashboardPage from "../src/app/dashboard/page"
+import ApplicationsPage from "../src/app/dashboard/applications/page"
 
-jest.mock("next/navigation", () => ({ usePathname: () => "/dashboard" }))
+jest.mock("next/navigation", () => ({ usePathname: () => window.location.pathname }))
 
 const fetchMock = jest.fn()
 const originalFetch = globalThis.fetch
@@ -34,7 +35,7 @@ function respond(applications: object[]) {
   }))
 }
 
-it("summarizes API records, opens the existing application form, and keeps the board accessible", async () => {
+it("summarizes API records, opens the existing application form, and links to the Applications page", async () => {
   respond([
     createRecord("older", "Acme", "phone_screen", "2026-10-01T00:00:00Z"),
     createRecord("newer", "Example Corp", "interview", "2026-10-04T00:00:00Z"),
@@ -58,11 +59,10 @@ it("summarizes API records, opens the existing application form, and keeps the b
   expect(within(dialog).getByLabelText(/Date applied/)).toHaveValue("")
   fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }))
 
-  expect(within(recent).getByRole("link", { name: /View all applications/ })).toHaveAttribute("href", "#applications")
-  window.history.replaceState(null, "", "/dashboard#applications")
-  fireEvent(window, new Event("hashchange"))
-  expect(screen.getByRole("region", { name: "Application board" })).toBeVisible()
-  expect(fetchMock.mock.calls.filter(([url]) => String(url).endsWith("/applications"))).toHaveLength(1)
+  expect(within(recent).getByRole("link", { name: /View all applications/ })).toHaveAttribute("href", "/dashboard/applications")
+  const navigation = within(screen.getByRole("navigation", { name: "Workspace" }))
+  expect(navigation.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page")
+  expect(navigation.getByRole("link", { name: "Applications" })).toHaveAttribute("href", "/dashboard/applications")
 })
 
 it("keeps unavailable counts separate from zero and retries a failed request", async () => {
@@ -116,8 +116,12 @@ it("filters the applications list and reflects an edit in the Kanban view", asyn
     applied_date: "2026-11-04",
   }
   respond([application, createRecord("second", "Northstar", "interview", "2026-11-05T00:00:00Z")])
-  window.history.replaceState(null, "", "/dashboard#applications")
-  render(<DashboardPage />)
+  window.history.replaceState(null, "", "/dashboard/applications")
+  render(<ApplicationsPage />)
+
+  const navigation = within(screen.getByRole("navigation", { name: "Workspace" }))
+  expect(navigation.getByRole("link", { name: "Applications" })).toHaveAttribute("aria-current", "page")
+  expect(navigation.getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/dashboard")
 
   const board = await screen.findByRole("region", { name: "Application board" })
   expect(within(board).getByRole("region", { name: "Saved" })).toHaveTextContent("Acme")

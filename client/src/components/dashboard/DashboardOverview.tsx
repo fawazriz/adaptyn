@@ -134,7 +134,7 @@ export function DashboardOverview({ applications, state, onAdd, onReview, onRetr
               ))}
             </dl>
             <div className={styles.panelFooter}>
-              <a href="#applications" className={styles.textLink}>View all applications <IconArrowRight size={15} aria-hidden="true" /></a>
+              <Link href="/dashboard/applications" className={styles.textLink}>View all applications <IconArrowRight size={15} aria-hidden="true" /></Link>
             </div>
           </section>
 
@@ -153,7 +153,7 @@ export function DashboardOverview({ applications, state, onAdd, onReview, onRetr
         <section className={styles.panel} aria-labelledby="recent-heading">
           <header className={`${styles.panelHeader} ${styles.recentHeader}`}>
             <h2 id="recent-heading">Recent applications</h2>
-            <a href="#applications" className={styles.textLink}>View all applications <IconArrowRight size={15} aria-hidden="true" /></a>
+            <Link href="/dashboard/applications" className={styles.textLink}>View all applications <IconArrowRight size={15} aria-hidden="true" /></Link>
           </header>
           {ready && sorted.length > 0 ? (
             <div className={styles.tableScroll} tabIndex={0} role="region" aria-labelledby="recent-heading">

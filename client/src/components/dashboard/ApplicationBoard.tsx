@@ -250,7 +250,7 @@ function isFormValid(form: FormState, dateRequired = true) {
 
 // Props for the ApplicationBoard component, which manages the state and interactions for the main application board. This includes the open state of the add dialog, the default status for new applications, and callbacks for opening the add dialog from columns.
 interface Props {
-  showBoard: boolean
+  showApplications: boolean
   addOpen: boolean
   addDefaultStatus: ApplicationStatus
   onAddOpenChange: (open: boolean) => void
@@ -258,7 +258,7 @@ interface Props {
 }
 
 export function ApplicationBoard({
-  showBoard,
+  showApplications,
   addOpen,
   addDefaultStatus,
   onAddOpenChange,
@@ -394,7 +394,7 @@ export function ApplicationBoard({
 
   return (
     <>
-      {showBoard ? (
+      {showApplications ? (
         <main id="applications" className={styles.surface}>
           <div className={styles.content}>
             <header className={styles.heading}>

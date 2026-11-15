@@ -603,6 +603,7 @@
 .applicationsTable thead th {
   border-top: 0;
   padding-block: 12px;
+  overflow-wrap: normal;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

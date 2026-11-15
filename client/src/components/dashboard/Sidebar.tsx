@@ -21,17 +21,16 @@ import { Profile } from "./types"
 import styles from "./dashboard.module.css"
 
 
-const NAV_ITEMS = [
-  { icon: IconLayoutKanban, label: "Tracker", href: "/dashboard" },
+const DASHBOARD_ITEMS = [
+  { icon: IconLayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: IconLayoutKanban, label: "Applications", href: "/dashboard/applications" },
   { icon: IconFileText, label: "Resumes", href: "/dashboard/resumes" },
-  { icon: IconChartBar, label: "Analytics", href: "/dashboard/analytics" },
-  { icon: IconUsersGroup, label: "Recruiters", href: "/dashboard/recruiters" },
 ] as const
 
-const DASHBOARD_ITEMS = [
-  { icon: IconLayoutDashboard, label: "Dashboard", href: "#overview" },
-  { icon: IconLayoutKanban, label: "Applications", href: "#applications" },
-  NAV_ITEMS[1],
+const NAV_ITEMS = [
+  ...DASHBOARD_ITEMS,
+  { icon: IconChartBar, label: "Analytics", href: "/dashboard/analytics" },
+  { icon: IconUsersGroup, label: "Recruiters", href: "/dashboard/recruiters" },
 ] as const
 
 const BOTTOM_ITEMS = [
@@ -41,10 +40,10 @@ const BOTTOM_ITEMS = [
 interface Props {
   collapsed: boolean
   onToggle: () => void
-  dashboardView?: "overview" | "applications"
+  dashboardStyle?: boolean
 }
 
-export function Sidebar({ collapsed, onToggle, dashboardView }: Props) {
+export function Sidebar({ collapsed, onToggle, dashboardStyle }: Props) {
   const pathname = usePathname()
   const [profile, setProfile] = useState<Profile | null>(null)
 
@@ -57,7 +56,7 @@ export function Sidebar({ collapsed, onToggle, dashboardView }: Props) {
       className={cn(
         "flex flex-col h-screen border-r border-border bg-card shrink-0 transition-all duration-200 overflow-hidden",
         collapsed ? "w-14" : "w-56",
-        dashboardView && styles.sidebar
+        dashboardStyle && styles.sidebar
       )}
     >
       {/* Logo */}
@@ -65,28 +64,27 @@ export function Sidebar({ collapsed, onToggle, dashboardView }: Props) {
         className={cn(
           "flex items-center h-14 border-b border-border shrink-0 px-4 gap-2.5",
           collapsed && "justify-center px-0",
-          dashboardView && styles.sidebarBrand
+          dashboardStyle && styles.sidebarBrand
         )}
       >
-        {dashboardView ? (
+        {dashboardStyle ? (
           <Image src="/adaptyn-logo.svg" width={28} height={28} alt="" />
         ) : (
           <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
             <span className="text-primary-foreground text-[11px] font-bold">A</span>
           </div>
         )}
-        {(!collapsed || dashboardView) && (
-          <span className={cn("font-semibold text-sm text-foreground tracking-tight", collapsed && (dashboardView ? styles.collapsedLabel : "sr-only"))}>Adaptyn</span>
+        {(!collapsed || dashboardStyle) && (
+          <span className={cn("font-semibold text-sm text-foreground tracking-tight", collapsed && (dashboardStyle ? styles.collapsedLabel : "sr-only"))}>Adaptyn</span>
         )}
       </div>
 
       {/* Primary nav */}
-      <nav aria-label="Workspace" className={cn("flex-1 min-h-0 overflow-y-auto px-2 py-3 space-y-0.5", dashboardView && styles.sidebarNav)}>
-        {(dashboardView ? DASHBOARD_ITEMS : NAV_ITEMS).map(({ icon: Icon, label, href }) => {
-          const active = dashboardView ? href === `#${dashboardView}` : pathname === href
-          const NavLink = href.startsWith("#") ? "a" : Link
+      <nav aria-label="Workspace" className={cn("flex-1 min-h-0 overflow-y-auto px-2 py-3 space-y-0.5", dashboardStyle && styles.sidebarNav)}>
+        {(dashboardStyle ? DASHBOARD_ITEMS : NAV_ITEMS).map(({ icon: Icon, label, href }) => {
+          const active = pathname === href
           return (
-            <NavLink
+            <Link
               key={label}
               href={href}
               className={cn(
@@ -101,17 +99,17 @@ export function Sidebar({ collapsed, onToggle, dashboardView }: Props) {
               aria-current={active ? "page" : undefined}
             >
               <Icon size={15} className="shrink-0" aria-hidden="true" />
-              <span className={cn(collapsed && (dashboardView ? styles.collapsedLabel : "sr-only"))}>{label}</span>
-            </NavLink>
+              <span className={cn(collapsed && (dashboardStyle ? styles.collapsedLabel : "sr-only"))}>{label}</span>
+            </Link>
           )
         })}
       </nav>
 
       {/* Bottom section */}
-      <div className={cn("shrink-0 px-2 pb-3 space-y-0.5", dashboardView && styles.sidebarAccount)}>
+      <div className={cn("shrink-0 px-2 pb-3 space-y-0.5", dashboardStyle && styles.sidebarAccount)}>
         <Separator className="mb-2" />
 
-        {!dashboardView && BOTTOM_ITEMS.map(({ icon: Icon, label, href }) => {
+        {!dashboardStyle && BOTTOM_ITEMS.map(({ icon: Icon, label, href }) => {
           const active = pathname === href
           return (
             <Link
@@ -135,12 +133,12 @@ export function Sidebar({ collapsed, onToggle, dashboardView }: Props) {
         {/* User row */}
         {!collapsed && (
           <div className="flex items-center gap-2.5 px-2.5 py-2 mt-1">
-            <div className={cn("w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0", dashboardView && styles.sidebarInitials)}>
+            <div className={cn("w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0", dashboardStyle && styles.sidebarInitials)}>
               <span className="text-[9px] font-semibold text-primary">{intiialsFromProfile(profile)}</span>
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-foreground truncate">{profile?.full_name || "Profile"}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{profile?.email || (dashboardView ? "" : "email@example.com")}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{profile?.email || (dashboardStyle ? "" : "email@example.com")}</p>
             </div>
           </div>
         )}
