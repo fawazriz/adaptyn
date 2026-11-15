@@ -108,3 +108,41 @@ it("updates totals only after the authenticated creation request succeeds", asyn
     method: "POST",
   }))
 })
+
+it("filters the applications list and reflects an edit in the Kanban view", async () => {
+  const application = {
+    ...createRecord("first", "Acme", "saved", "2026-11-04T00:00:00Z"),
+    location: "Toronto",
+    applied_date: "2026-11-04",
+  }
+  respond([application, createRecord("second", "Northstar", "interview", "2026-11-05T00:00:00Z")])
+  window.history.replaceState(null, "", "/dashboard#applications")
+  render(<DashboardPage />)
+
+  const board = await screen.findByRole("region", { name: "Application board" })
+  expect(within(board).getByRole("region", { name: "Saved" })).toHaveTextContent("Acme")
+
+  fireEvent.click(screen.getByRole("button", { name: "List" }))
+  const list = screen.getByRole("region", { name: "Applications list" })
+  const search = screen.getByRole("searchbox", { name: "Search applications" })
+  fireEvent.change(search, { target: { value: "toronto" } })
+  expect(within(list).getByText("Toronto")).toBeVisible()
+  expect(within(list).getByText("Nov 4, 2026")).toBeVisible()
+  expect(within(list).queryByText("Northstar")).toBeNull()
+
+  fireEvent.change(screen.getByRole("combobox", { name: "Stage" }), { target: { value: "interview" } })
+  expect(within(list).getByText("No applications match your filters.")).toBeVisible()
+  fireEvent.change(screen.getByRole("combobox", { name: "Stage" }), { target: { value: "saved" } })
+  fireEvent.click(within(list).getByRole("button", { name: /Edit Software Engineer at Acme/ }))
+
+  const dialog = screen.getByRole("dialog", { name: "Edit application" })
+  fireEvent.change(within(dialog).getByLabelText(/Status/), { target: { value: "applied" } })
+  fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ ...application, status: "applied" }) })
+  fireEvent.click(within(dialog).getByRole("button", { name: "Save changes" }))
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+
+  fireEvent.click(screen.getByRole("button", { name: "Kanban" }))
+  const updatedBoard = screen.getByRole("region", { name: "Application board" })
+  expect(within(updatedBoard).getByRole("region", { name: "Applied" })).toHaveTextContent("Acme")
+  expect(fetchMock.mock.calls.filter(([url]) => String(url).endsWith("/applications"))).toHaveLength(1)
+})

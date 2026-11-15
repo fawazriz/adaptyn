@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { IconPlus } from "@tabler/icons-react"
+import { IconLayoutKanban, IconListDetails, IconPlus } from "@tabler/icons-react"
+import { ApplicationList } from "./ApplicationList"
 import { DashboardOverview } from "./DashboardOverview"
 import styles from "./dashboard.module.css"
 import { Button } from "@/components/ui/button"
@@ -18,52 +19,13 @@ import {
 import { ApplicationColumn, type ColumnConfig } from "./ApplicationColumn"
 import type { Application, ApplicationStatus, WorkType } from "./types"
 
-// ─── Column config ────────────────────────────────────────────────────────────
-
-// Define the order of application statuses for moving cards and displaying options
-const STATUS_ORDER: ApplicationStatus[] = [
-  'saved', 'applied', 'phone_screen', 'interview', 'offer', 'rejected'
-]
-
-
-// Column configuration for the application board. Each column corresponds to an application status.
 const COLUMNS: ColumnConfig[] = [
-  {
-    id: "saved",
-    label: "Saved",
-    dotColor: "bg-slate-400 dark:bg-slate-500",
-    labelColor: "text-slate-600 dark:text-slate-400",
-  },
-  {
-    id: "applied",
-    label: "Applied",
-    dotColor: "bg-green-500",
-    labelColor: "text-green-600 dark:text-green-400",
-  },
-  {
-    id: "phone_screen",
-    label: "Phone Screen",
-    dotColor: "bg-yellow-500",
-    labelColor: "text-yellow-600 dark:text-yellow-400",
-  },
-  {
-    id: "interview",
-    label: "Interview",
-    dotColor: "bg-violet-500",
-    labelColor: "text-violet-600 dark:text-violet-400",
-  },
-  {
-    id: "offer",
-    label: "Offer",
-    dotColor: "bg-emerald-500",
-    labelColor: "text-emerald-600 dark:text-emerald-400",
-  },
-  {
-    id: "rejected",
-    label: "Rejected",
-    dotColor: "bg-red-400",
-    labelColor: "text-red-600 dark:text-red-400",
-  },
+  { id: "saved", label: "Saved" },
+  { id: "applied", label: "Applied" },
+  { id: "phone_screen", label: "Phone screen" },
+  { id: "interview", label: "Interview" },
+  { id: "offer", label: "Offer" },
+  { id: "rejected", label: "Rejected" },
 ]
 
 interface ApiApplication {
@@ -72,6 +34,7 @@ interface ApiApplication {
   role: string
   status: ApplicationStatus
   job_url: string | null
+  location?: string | null
   applied_date: string | null
   salary_min: number | null
   notes: string | null
@@ -89,6 +52,7 @@ function toApplication(app: ApiApplication): Application {
     status: app.status,
     dateApplied: app.applied_date ?? "",
     url: app.job_url ?? "",
+    location: app.location ?? undefined,
     salary: app.salary_min ?? undefined,
     note: app.notes ?? undefined,
     createdAt: app.created_at ?? undefined,
@@ -265,9 +229,9 @@ function ApplicationForm({
             value={form.status}
             onChange={(e) => onChange({ status: e.target.value as ApplicationStatus })}
           >
-            {STATUS_ORDER.map((s) => (
-              <option key={s} value={s}>
-                {COLUMNS.find((column) => column.id === s)?.label}
+            {COLUMNS.map(({ id, label }) => (
+              <option key={id} value={id}>
+                {label}
               </option>
             ))}
           </select>
@@ -300,6 +264,7 @@ export function ApplicationBoard({
   onAddOpenChange,
   onColumnAddClick,
 }: Props) {
+  const [view, setView] = useState<"board" | "list">("board")
   const [applications, setApplications] = useState<Application[]>([])
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading")
   const [loadAttempt, setLoadAttempt] = useState(0)
@@ -405,8 +370,8 @@ export function ApplicationBoard({
   async function handleMoveNext(id: string) {
     const app = applications.find((record) => record.id === id)
     if (!app || savingRef.current) return
-    const index = STATUS_ORDER.indexOf(app.status)
-    const status = STATUS_ORDER[index + 1]
+    const index = COLUMNS.findIndex(({ id }) => id === app.status)
+    const status = COLUMNS[index + 1]?.id
     if (index < 0 || !status) return
 
     setBoardError("")
@@ -425,17 +390,32 @@ export function ApplicationBoard({
     dialogTrigger.current.focus()
   }
 
+  const visibleApplications = applications.filter(({ id }) => !hiddenIds.includes(id))
+
   return (
     <>
       {showBoard ? (
         <main id="applications" className={styles.surface}>
           <div className={styles.content}>
             <header className={styles.heading}>
-              <div><h1>Applications</h1><p>Manage roles by stage on your application board.</p></div>
+              <div className={styles.applicationsTitle}>
+                <h1>{view === "board" ? "Kanban board" : "Applications list"}</h1>
+                {loadState === "ready" && (
+                  <p>{visibleApplications.length} {visibleApplications.length === 1 ? "application" : "applications"}</p>
+                )}
+              </div>
               <button type="button" className={styles.primary} onClick={() => onColumnAddClick("applied")} disabled={loadState !== "ready" || saving}>
                 <IconPlus size={17} aria-hidden="true" /> Add application
               </button>
             </header>
+            <div className={styles.viewSwitch} role="group" aria-label="Applications view">
+              <button type="button" aria-pressed={view === "board"} onClick={() => setView("board")}>
+                <IconLayoutKanban size={16} aria-hidden="true" /> Kanban
+              </button>
+              <button type="button" aria-pressed={view === "list"} onClick={() => setView("list")}>
+                <IconListDetails size={16} aria-hidden="true" /> List
+              </button>
+            </div>
             {boardError && <p role="alert" className={styles.notice}>{boardError}</p>}
             {loadState === "error" && (
               <div className={styles.notice}>
@@ -444,13 +424,13 @@ export function ApplicationBoard({
               </div>
             )}
             {loadState === "loading" && <p role="status">Loading applications…</p>}
-            {loadState === "ready" && (
+            {loadState === "ready" && view === "board" && (
               <div className={styles.boardScroll} role="region" aria-label="Application board" tabIndex={0}>
                 {COLUMNS.map((column) => (
                   <ApplicationColumn
                     key={column.id}
                     config={column}
-                    cards={applications.filter(({ id, status }) => status === column.id && !hiddenIds.includes(id))}
+                    cards={visibleApplications.filter(({ status }) => status === column.id)}
                     onAddClick={() => {
                       if (!savingRef.current) onColumnAddClick(column.id)
                     }}
@@ -460,6 +440,9 @@ export function ApplicationBoard({
                   />
                 ))}
               </div>
+            )}
+            {loadState === "ready" && view === "list" && (
+              <ApplicationList applications={visibleApplications} stages={COLUMNS} onReview={handleEdit} />
             )}
           </div>
         </main>

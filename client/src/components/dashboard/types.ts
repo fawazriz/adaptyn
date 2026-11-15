@@ -13,6 +13,7 @@ export interface Application {
   company: string
   referenceNumber?: string
   role: string
+  location?: string
   workType?: WorkType
   salary?: number
   url: string
