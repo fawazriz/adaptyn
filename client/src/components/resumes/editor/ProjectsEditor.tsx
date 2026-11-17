@@ -85,8 +85,6 @@ export function ProjectsEditor({
                     <Label htmlFor={`proj_${item.id}_name`}>Project name</Label>
                     <Input
                       id={`proj_${item.id}_name`}
-                      aria-invalid={Boolean(errors[`proj_${item.id}_name`])}
-                      aria-describedby={errors[`proj_${item.id}_name`] ? `proj_${item.id}_name-error` : undefined}
                       value={item.projectName}
                       onChange={(e) =>
                         onChange(
@@ -99,7 +97,6 @@ export function ProjectsEditor({
                       }
                       placeholder="Resume Builder"
                     />
-                    {errors[`proj_${item.id}_name`] && <small id={`proj_${item.id}_name-error`} className="text-destructive">{errors[`proj_${item.id}_name`]}</small>}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor={`proj_${item.id}_stack`}>Tech stack</Label>
@@ -118,6 +115,18 @@ export function ProjectsEditor({
                       placeholder="Next.js, TypeScript, Tailwind"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor={`proj_${item.id}_dates`}>Project dates (optional)</Label>
+                  <Input
+                    id={`proj_${item.id}_dates`}
+                    value={item.dates ?? ""}
+                    onChange={(event) => onChange(value.map((entry) =>
+                      entry.id === item.id ? { ...entry, dates: event.target.value } : entry
+                    ))}
+                    placeholder="May 2026 – Aug 2026"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
@@ -150,7 +159,10 @@ export function ProjectsEditor({
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-3">
-                    <h5 className="text-sm font-medium">Bullet points</h5>
+                    <div>
+                      <h5 className="text-sm font-medium">Bullet points</h5>
+                      <p className="text-xs text-muted-foreground">Use **text** for bold in the PDF.</p>
+                    </div>
                     <Button
                       type="button"
                       variant="outline"

@@ -53,8 +53,10 @@ export function readResume(content: unknown, id: string): ResumeData {
       id: string(entry.id) || `education-${index}`,
       school: string(entry.school),
       degree: string(entry.degree),
+      location: string(entry.location),
       graduationDate: string(entry.graduationDate),
       gpa: string(entry.gpa),
+      coursework: string(entry.coursework),
     })),
     experience: entries(source.experience).map((entry, index) => ({
       ...entry,
@@ -70,6 +72,7 @@ export function readResume(content: unknown, id: string): ResumeData {
       id: string(entry.id) || `project-${index}`,
       projectName: string(entry.projectName),
       techStack: string(entry.techStack),
+      dates: string(entry.dates),
       link: string(entry.link),
       bullets: strings(entry.bullets),
     })),
@@ -79,6 +82,7 @@ export function readResume(content: unknown, id: string): ResumeData {
       frameworks: strings(skills.frameworks),
       tools: strings(skills.tools),
       databases: strings(skills.databases),
+      concepts: strings(skills.concepts),
     },
   }
 }
@@ -137,8 +141,8 @@ export function resumeDate(value?: string) {
 
 export function resumeForSubmission(resume: ResumeData): ResumeData {
   const skills = { ...resume.skills }
-  for (const category of ["languages", "frameworks", "tools", "databases"] as const) {
-    skills[category] = skills[category].map((skill) => skill.trim()).filter(Boolean)
+  for (const category of ["languages", "frameworks", "tools", "databases", "concepts"] as const) {
+    skills[category] = (skills[category] ?? []).map((skill) => skill.trim()).filter(Boolean)
   }
   return { ...resume, skills }
 }
@@ -151,15 +155,7 @@ export function prepareResumePdf(resume: ResumeData) {
     .filter(({ company, role, dates, location, bullets }) => company.trim() || role.trim() || dates.trim() || location.trim() || bullets.length)
   const projects = content.projects
     .map((entry) => ({ ...entry, bullets: entry.bullets.map((bullet) => bullet.trim()).filter(Boolean) }))
-    .filter(({ projectName, techStack, link, bullets }) => projectName.trim() || techStack.trim() || link?.trim() || bullets.length)
-
-  // The LaTeX template emits an item list for each included experience and project.
-  for (const entry of experience) {
-    if (!entry.bullets.length) errors[`exp_${entry.id}_role`] = "Add a bullet to this experience before generating a PDF."
-  }
-  for (const project of projects) {
-    if (!project.bullets.length) errors[`proj_${project.id}_name`] = "Add a bullet to this project before generating a PDF."
-  }
+    .filter(({ projectName, techStack, dates, link, bullets }) => projectName.trim() || techStack.trim() || dates?.trim() || link?.trim() || bullets.length)
 
   const skills = Object.fromEntries(Object.entries(content.skills).filter(([, values]) =>
     Array.isArray(values) ? values.length > 0 : Boolean(values),
@@ -171,8 +167,8 @@ export function prepareResumePdf(resume: ResumeData) {
       ...content,
       experience,
       projects,
-      education: content.education.filter(({ school, degree, graduationDate, gpa }) =>
-        school.trim() || degree.trim() || graduationDate.trim() || gpa?.trim(),
+      education: content.education.filter(({ school, degree, location, graduationDate, gpa, coursework }) =>
+        school.trim() || degree.trim() || location?.trim() || graduationDate.trim() || gpa?.trim() || coursework?.trim(),
       ),
       skills: Object.keys(skills).length ? skills : undefined,
     },

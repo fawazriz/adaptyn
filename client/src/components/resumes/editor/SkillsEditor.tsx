@@ -9,8 +9,9 @@ import styles from "../resumes.module.css"
 const categories = [
   { key: "languages", label: "Languages" },
   { key: "frameworks", label: "Frameworks and libraries" },
-  { key: "tools", label: "Developer tools" },
   { key: "databases", label: "Databases" },
+  { key: "tools", label: "Developer tools" },
+  { key: "concepts", label: "Concepts" },
 ] as const
 
 export function SkillsEditor({ value, onChange }: {
@@ -29,7 +30,7 @@ export function SkillsEditor({ value, onChange }: {
             </Button>
           </div>
           <Textarea id={`resume-skills-${key}`} aria-describedby="resume-skills-help" rows={3}
-            value={value[key].join("\n")}
+            value={(value[key] ?? []).join("\n")}
             onChange={(event) => onChange({ ...value, [key]: event.target.value.split("\n") })}
           />
         </div>

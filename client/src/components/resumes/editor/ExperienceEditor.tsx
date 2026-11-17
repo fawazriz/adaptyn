@@ -101,8 +101,6 @@ export function ExperienceEditor({
                     <Label htmlFor={`exp_${item.id}_role`}>Role</Label>
                     <Input
                       id={`exp_${item.id}_role`}
-                      aria-invalid={Boolean(errors[`exp_${item.id}_role`])}
-                      aria-describedby={errors[`exp_${item.id}_role`] ? `exp_${item.id}_role-error` : undefined}
                       value={item.role}
                       onChange={(e) =>
                         onChange(
@@ -113,7 +111,6 @@ export function ExperienceEditor({
                       }
                       placeholder="Software Engineer Intern"
                     />
-                    {errors[`exp_${item.id}_role`] && <small id={`exp_${item.id}_role-error`} className="text-destructive">{errors[`exp_${item.id}_role`]}</small>}
                   </div>
                 </div>
 
@@ -159,7 +156,10 @@ export function ExperienceEditor({
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-3">
-                    <h5 className="text-sm font-medium">Bullet points</h5>
+                    <div>
+                      <h5 className="text-sm font-medium">Bullet points</h5>
+                      <p className="text-xs text-muted-foreground">Use **text** for bold in the PDF.</p>
+                    </div>
                     <Button
                       type="button"
                       variant="outline"

@@ -2,8 +2,10 @@ export interface EducationItem {
   id: string
   school: string
   degree: string
+  location?: string
   graduationDate: string
   gpa?: string
+  coursework?: string
 }
 
 export interface ExperienceItem {
@@ -19,6 +21,7 @@ export interface ProjectItem {
   id: string
   projectName: string
   techStack: string
+  dates?: string
   link?: string
   bullets: string[]
 }
@@ -28,6 +31,7 @@ export interface Skills {
   frameworks: string[]
   tools: string[]
   databases: string[]
+  concepts?: string[]
 }
 
 export interface ResumeHeader {
