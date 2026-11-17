@@ -8,6 +8,8 @@ services:
       - "3000:3000"
     env_file:
       - ./client/.env.local
+    environment:
+      API_URL: http://server:8000
   server:
     build: 
       context: ./server

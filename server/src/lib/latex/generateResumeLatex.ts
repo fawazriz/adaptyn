@@ -33,6 +33,7 @@ type ResumeData = {
     id: string;
     projectName: string;
     techStack: string;
+    dates?: string;
     link?: string;
     bullets: string[];
   }[];
@@ -53,6 +54,19 @@ type ResumeData = {
   };
 };
 
+const latexEscapes: Record<string, string> = {
+  "\\": "\\textbackslash{}",
+  "&": "\\&",
+  "%": "\\%",
+  "$": "\\$",
+  "#": "\\#",
+  "_": "\\_",
+  "{": "\\{",
+  "}": "\\}",
+  "~": "\\textasciitilde{}",
+  "^": "\\textasciicircum{}",
+};
+
 function escapeLatex(value: unknown = ""): string {
   const text = Array.isArray(value)
     ? value.join(", ")
@@ -60,32 +74,87 @@ function escapeLatex(value: unknown = ""): string {
       ? ""
       : String(value)
 
-  return text
-    .replace(/\\/g, "\\textbackslash{}")
-    .replace(/&/g, "\\&")
-    .replace(/%/g, "\\%")
-    .replace(/\$/g, "\\$")
-    .replace(/#/g, "\\#")
-    .replace(/_/g, "\\_")
-    .replace(/{/g, "\\{")
-    .replace(/}/g, "\\}")
-    .replace(/~/g, "\\textasciitilde{}")
-    .replace(/\^/g, "\\textasciicircum{}")
+  return text.replace(/[\\&%$#_{}~^]/g, (character) => latexEscapes[character]);
 }
 
-function href(url?: unknown, label?: unknown) {
-  if (!url) return ""
-  const safeUrl = String(url)
-  return `\\href{${safeUrl}}{\\underline{${escapeLatex(label ?? safeUrl)}}}`
+function linkDestination(value: string, email: boolean) {
+  if (/[{}\\\s]/.test(value)) return;
+  try {
+    if (email) {
+      const separator = value.indexOf("@");
+      if (separator <= 0 || separator !== value.lastIndexOf("@") || separator === value.length - 1) return;
+      return `mailto:${encodeURIComponent(value.slice(0, separator))}@${encodeURIComponent(value.slice(separator + 1))}`;
+    }
+
+    const url = new URL(/^[a-z][a-z\d+.-]*:/i.test(value) ? value : "https://" + value);
+    if (url.protocol === "https:" || url.protocol === "http:") return url.href.replace(/\^/g, "%5E");
+  } catch {
+    return;
+  }
 }
 
-function renderBullets(bullets: string[] = []) {
-  return bullets
-    .map((b) => `\\resumeItem{${escapeLatex(b)}}`)
-    .join("\n");
+function href(value: string | undefined, email = false) {
+  const label = value?.trim();
+  if (!label) return "";
+  const destination = linkDestination(label, email);
+  const display = !email && destination ? label.replace(/^https?:\/\//i, "") : label;
+  const text = `\\underline{${escapeLatex(display)}}`;
+  return destination ? `\\href{${destination}}{${text}}` : text;
+}
+
+function renderBulletText(bullet: string) {
+  let rendered = "";
+  let cursor = 0;
+  // Match pairs of exactly two asterisks. Keep unmatched delimiters as text.
+  const boldSpans = /(?<!\*)\*\*(?!\*)((?:[^*\r\n]|\*(?!\*))+?)(?<!\*)\*\*(?!\*)/g;
+  for (const match of bullet.matchAll(boldSpans)) {
+    if (!match[1].trim()) continue;
+    rendered += escapeLatex(bullet.slice(cursor, match.index));
+    rendered += `\\textbf{${escapeLatex(match[1])}}`;
+    cursor = match.index + match[0].length;
+  }
+  return rendered + escapeLatex(bullet.slice(cursor));
+}
+
+function renderBulletList(bullets: string[] = []) {
+  const items = bullets
+    .filter((bullet) => bullet.trim())
+    .map((bullet) => `\\resumeItem{${renderBulletText(bullet)}}`);
+  if (!items.length) return "";
+  return ["\\resumeItemListStart", ...items, "\\resumeItemListEnd"].join("\n");
 }
 
 export function generateResumeLatex(resume: ResumeData): string {
+  const { header, skills } = resume;
+  const name = header.fullName?.trim();
+  const contact = [
+    escapeLatex(header.phone?.trim()),
+    href(header.email, true),
+    href(header.linkedIn),
+    href(header.githubOrPortfolio),
+  ].filter(Boolean).join(" $|$ ");
+
+  const skillLines = ([
+    ["Languages", skills?.languages],
+    ["Frameworks", skills?.frameworks],
+    ["Databases", skills?.databases],
+    ["Tools", skills?.tools],
+    ["Concepts", skills?.concepts],
+  ] as const).flatMap(([label, values]) => {
+    const items = values?.map((value) => value.trim()).filter(Boolean);
+    return items?.length ? [`\\textbf{${label}:} ${escapeLatex(items)}`] : [];
+  });
+
+  const education = (resume.education ?? []).filter(({ degree, school, location, graduationDate, coursework }) =>
+    [degree, school, location, graduationDate, coursework].some((value) => value?.trim()),
+  );
+  const experience = (resume.experience ?? []).filter(({ role, company, location, dates, bullets }) =>
+    [role, company, location, dates, ...(bullets ?? [])].some((value) => value?.trim()),
+  );
+  const projects = (resume.projects ?? []).filter(({ projectName, techStack, dates, bullets }) =>
+    [projectName, techStack, dates, ...(bullets ?? [])].some((value) => value?.trim()),
+  );
+
   return `
 \\documentclass[letterpaper,11pt]{article}
 
@@ -100,6 +169,7 @@ export function generateResumeLatex(resume: ResumeData): string {
 \\usepackage{fancyhdr}
 \\usepackage[english]{babel}
 \\usepackage{tabularx}
+\\usepackage{pdfpages}
 \\input{glyphtounicode}
 
 \\pagestyle{fancy}
@@ -153,34 +223,28 @@ export function generateResumeLatex(resume: ResumeData): string {
 
 \\begin{document}
 
+${name || contact ? `
 \\begin{center}
-    \\textbf{\\Huge \\scshape ${escapeLatex(resume.header.fullName)}} \\\\ \\vspace{1pt}
-    \\large
-    ${[
-      resume.header.phone ? escapeLatex(resume.header.phone) : "",
-      resume.header.email ? `\\href{mailto:${resume.header.email}}{\\underline{${escapeLatex(resume.header.email)}}}` : "",
-      href(resume.header.linkedIn, resume.header.linkedIn),
-      href(resume.header.githubOrPortfolio, resume.header.githubOrPortfolio),
-    ]
-      .filter(Boolean)
-      .join(" $|$ ")}
+    ${name ? `\\textbf{\\Huge \\scshape ${escapeLatex(name)}}${contact ? " \\\\ \\vspace{1pt}" : ""}` : ""}
+    ${contact ? `\\large ${contact}` : ""}
 \\end{center}
+` : ""}
 
 ${
-  resume.education?.length
+  education.length
     ? `
 \\section{Education}
 \\resumeSubHeadingListStart
-${resume.education
+${education
   .map(
     (edu) => `
   \\resumeSubheading
     {${escapeLatex(edu.degree)}}{${escapeLatex(edu.location ?? "")}}
     {${escapeLatex(edu.school)}}{${escapeLatex(edu.graduationDate ?? "")}}
     ${
-      edu.coursework
+      edu.coursework?.trim()
         ? `\\resumeItemListStart
-      \\resumeItem{\\textbf{Relevant Coursework}: ${escapeLatex(edu.coursework)}}
+      \\resumeItem{\\textbf{Relevant Coursework}: ${renderBulletText(edu.coursework.trim())}}
     \\resumeItemListEnd`
         : ""
     }
@@ -193,16 +257,12 @@ ${resume.education
 }
 
 ${
-  resume.skills
+  skillLines.length
     ? `
-\\section{Technical Skills}
+\\section{Skills}
 \\begin{itemize}[leftmargin=0.15in, label={}]
 \\small{\\item{
-  ${resume.skills.languages ? `\\textbf{Languages}: ${escapeLatex(resume.skills.languages)} \\\\` : ""}
-  ${resume.skills.frameworks ? `\\textbf{Frameworks}: ${escapeLatex(resume.skills.frameworks)} \\\\` : ""}
-  ${resume.skills.databases ? `\\textbf{Databases}: ${escapeLatex(resume.skills.databases)} \\\\` : ""}
-  ${resume.skills.tools ? `\\textbf{Tools}: ${escapeLatex(resume.skills.tools)} \\\\` : ""}
-  ${resume.skills.concepts ? `\\textbf{Concepts}: ${escapeLatex(resume.skills.concepts)}` : ""}
+${skillLines.join(" \\\\\n")}
 }}
 \\end{itemize}
 `
@@ -210,19 +270,17 @@ ${
 }
 
 ${
-  resume.experience?.length
+  experience.length
     ? `
 \\section{Experience}
 \\resumeSubHeadingListStart
-${resume.experience
+${experience
   .map(
     (exp) => `
 \\resumeSubheading
   {${escapeLatex(exp.role)}}{${escapeLatex(exp.dates ?? "")}}
   {${escapeLatex(exp.company)}}{${escapeLatex(exp.location ?? "")}}
-  \\resumeItemListStart
-    ${renderBullets(exp.bullets)}
-  \\resumeItemListEnd
+${renderBulletList(exp.bullets)}
 `
   )
   .join("\n")}
@@ -232,20 +290,18 @@ ${resume.experience
 }
 
 ${
-  resume.projects?.length
+  projects.length
     ? `
 \\section{Projects}
 \\resumeSubHeadingListStart
-${resume.projects
+${projects
   .map(
     (project) => `
 \\resumeProjectHeading
-  {\\textbf{${escapeLatex(project.projectName)}} ${
-      project.techStack ? `$|$ \\emph{${escapeLatex(project.techStack)}}` : ""
-    }}{}
-  \\resumeItemListStart
-    ${renderBullets(project.bullets)}
-  \\resumeItemListEnd
+  {\\textbf{${escapeLatex(project.projectName)}}${
+      project.techStack?.trim() ? ` $|$ \\emph{${escapeLatex(project.techStack.trim())}}` : ""
+    }}{${escapeLatex(project.dates?.trim())}}
+${renderBulletList(project.bullets)}
 `
   )
   .join("\n")}
@@ -254,6 +310,7 @@ ${resume.projects
     : ""
 }
 
+${name || contact || education.length || skillLines.length || experience.length || projects.length ? "" : "\\null"}
 \\end{document}
 `;
 }

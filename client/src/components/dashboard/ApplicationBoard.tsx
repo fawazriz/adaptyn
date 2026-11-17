@@ -42,7 +42,7 @@ interface ApiApplication {
   updated_at?: string | null
 }
 
-const applicationsUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/applications`
+const applicationsUrl = "/api/applications"
 
 function toApplication(app: ApiApplication): Application {
   return {

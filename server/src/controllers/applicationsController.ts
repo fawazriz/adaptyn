@@ -1,16 +1,12 @@
 import { Request, Response } from "express";
-import supabase from "../db/supabase-client";
-import type { User } from "@supabase/supabase-js";
-
-interface AuthenticatedRequest extends Request {
-    user: User;
-}
+import type { AuthenticatedRequest } from "../middleware/auth";
 
 export async function getAllApplications(req: Request, res: Response) {
+    const { supabase, user } = req as AuthenticatedRequest;
     const { data, error } = await supabase
         .from("applications")
         .select("*")
-        .eq("user_id", (req as AuthenticatedRequest).user.id);
+        .eq("user_id", user.id);
 
     if (error) {
         return res.status(500).json({ error: error.message });
@@ -20,13 +16,14 @@ export async function getAllApplications(req: Request, res: Response) {
 }
 
 export async function getApplicationById(req: Request, res: Response) {
+    const { supabase, user } = req as AuthenticatedRequest;
     const { id } = req.params;
 
     const { data, error } = await supabase
         .from("applications")
         .select("*")
         .eq("id", id)
-        .eq("user_id", (req as AuthenticatedRequest).user.id)
+        .eq("user_id", user.id)
         .single();
 
     if (error) {
@@ -37,13 +34,14 @@ export async function getApplicationById(req: Request, res: Response) {
 }
 
 export async function getApplicationByCategory(req: Request, res: Response) {
+    const { supabase, user } = req as AuthenticatedRequest;
     const { category } = req.params;
 
     const { data, error } = await supabase
         .from("applications")
         .select("*")
         .eq("category", category)
-        .eq("user_id", (req as AuthenticatedRequest).user.id);
+        .eq("user_id", user.id);
 
     if (error) {
         return res.status(500).json({ error: error.message });
@@ -53,6 +51,7 @@ export async function getApplicationByCategory(req: Request, res: Response) {
 }
 
 export async function createApplication(req: Request, res: Response) {
+    const { supabase, user } = req as AuthenticatedRequest;
     const {
         company,
         role,
@@ -74,7 +73,7 @@ export async function createApplication(req: Request, res: Response) {
     }
 
     const application = {
-        user_id: (req as AuthenticatedRequest).user.id,
+        user_id: user.id,
         company,
         role,
         job_url: job_url || null,
@@ -102,6 +101,7 @@ export async function createApplication(req: Request, res: Response) {
 }
 
 export async function updateApplication(req: Request, res: Response) {
+    const { supabase, user } = req as AuthenticatedRequest;
     const { id } = req.params;
     const {
         company,
@@ -123,7 +123,7 @@ export async function updateApplication(req: Request, res: Response) {
         .from("applications")
         .update(updates)
         .eq("id", id)
-        .eq("user_id", (req as AuthenticatedRequest).user.id)
+        .eq("user_id", user.id)
         .select("*")
         .maybeSingle();
 
@@ -140,9 +140,10 @@ export async function updateApplication(req: Request, res: Response) {
 }
 
 export async function deleteApplication(req: Request, res: Response) {
+    const { supabase, user } = req as AuthenticatedRequest;
     const { id } = req.params;
 
-    const { error } = await supabase.from("applications").delete().eq("id", id).eq("user_id", (req as AuthenticatedRequest).user.id);
+    const { error } = await supabase.from("applications").delete().eq("id", id).eq("user_id", user.id);
 
     if (error) {
         return res.status(400).json({ error: error.message });

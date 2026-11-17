@@ -14,7 +14,7 @@ const originalFetch = globalThis.fetch
 
 beforeEach(() => {
   globalThis.fetch = mockFetch
-  document.cookie = "accessToken=; path=/; max-age=0"
+  document.cookie = "adaptyn-session=; path=/; max-age=0"
 })
 
 afterAll(() => {
@@ -33,8 +33,8 @@ function fillSignup(confirmPassword = "example-password") {
   enter("Confirm password", confirmPassword)
 }
 
-it("uses the existing routes and creates the session only after login returns a token", async () => {
-  mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ accessToken: "test-token" }) })
+it("navigates after the server sets the session cookie", async () => {
+  mockFetch.mockResolvedValueOnce({ ok: true, status: 204 })
   render(<LoginPage />)
 
   expect(screen.getByRole("link", { name: "Adaptyn" })).toHaveAttribute("href", "/")
@@ -46,7 +46,8 @@ it("uses the existing routes and creates the session only after login returns a 
   fireEvent.click(screen.getByRole("button", { name: "Sign in" }))
 
   await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"))
-  expect(document.cookie).toContain("accessToken=test-token")
+  expect(mockFetch).toHaveBeenCalledWith("/api/auth/login", expect.objectContaining({ method: "POST" }))
+  expect(document.cookie).not.toContain("adaptyn-session")
 })
 
 it("announces an unconfirmed email without navigating", async () => {
@@ -78,7 +79,7 @@ it("shows the sign-in next step from the real registration response shape withou
     method: "POST",
     body: JSON.stringify({ fullName: "Taylor Case", email: "taylor@example.com", password: "example-password" }),
   }))
-  expect(document.cookie).not.toContain("accessToken")
+  expect(document.cookie).not.toContain("adaptyn-session")
 })
 
 it("keeps a password mismatch on the confirmation field and skips the API call", () => {

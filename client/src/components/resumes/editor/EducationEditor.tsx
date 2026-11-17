@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { Textarea } from "@/components/ui/textarea"
 
 function makeId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID()
@@ -142,6 +143,28 @@ export function EducationEditor({
                       placeholder="3.8"
                     />
                   </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`edu_${item.id}_location`}>Location (optional)</Label>
+                  <Input
+                    id={`edu_${item.id}_location`}
+                    value={item.location ?? ""}
+                    onChange={(event) => onChange(value.map((entry) =>
+                      entry.id === item.id ? { ...entry, location: event.target.value } : entry
+                    ))}
+                    placeholder="City, province"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`edu_${item.id}_coursework`}>Relevant coursework (optional)</Label>
+                  <Textarea
+                    id={`edu_${item.id}_coursework`}
+                    value={item.coursework ?? ""}
+                    onChange={(event) => onChange(value.map((entry) =>
+                      entry.id === item.id ? { ...entry, coursework: event.target.value } : entry
+                    ))}
+                    placeholder="Algorithms, Operating Systems"
+                  />
                 </div>
               </CardContent>
             </Card>

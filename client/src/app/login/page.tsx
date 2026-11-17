@@ -28,7 +28,7 @@ export default function LoginPage() {
     setError("")
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -37,17 +37,16 @@ export default function LoginPage() {
         }),
       })
 
-      const data = await response.json().catch(() => null)
       if (!response.ok) {
+        const data = await response.json().catch(() => null)
         setError(authError(response.status, data?.error, "login"))
         return
       }
-      if (typeof data?.accessToken !== "string" || !data.accessToken) {
+      if (response.status !== 204) {
         setError("We couldn’t start your session. Try signing in again.")
         return
       }
 
-      document.cookie = `accessToken=${data.accessToken}; path=/; max-age=3600; SameSite=Lax`
       router.push("/dashboard")
     } catch {
       setError("We couldn’t reach the authentication service. Check your connection and try again.")

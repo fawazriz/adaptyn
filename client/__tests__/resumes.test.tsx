@@ -2,7 +2,7 @@ import "@testing-library/jest-dom"
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import ResumesPage from "../src/app/dashboard/resumes/page"
 import { ResumeEditorShell } from "@/components/resumes/editor/ResumeEditorShell"
-import { blankResume } from "@/components/resumes/editor/resume-data"
+import { blankResume, prepareResumePdf, readResume, resumeForSubmission } from "@/components/resumes/editor/resume-data"
 
 const mockPush = jest.fn()
 jest.mock("next/navigation", () => ({
@@ -26,6 +26,25 @@ const json = (data: unknown) => ({ ok: true, json: async () => data })
 
 beforeEach(() => { globalThis.fetch = fetchMock })
 afterAll(() => { globalThis.fetch = originalFetch })
+
+it("preserves inline bold markers through save, reopen, and PDF preparation", () => {
+  const draft = blankResume("resume-bold")
+  const bullet = "Developed a **Typer CLI** with **YAML/TOML**."
+  draft.education.push({ id: "education", school: "Example University", degree: "BSc", location: "Guelph, ON", graduationDate: "2027", coursework: "Algorithms", gpa: "3.8" })
+  draft.skills.concepts = ["Distributed Systems"]
+  draft.experience.push({ id: "experience", company: "Example", role: "Developer", dates: "", location: "", bullets: [bullet] })
+  draft.projects.push({ id: "project", projectName: "Example", techStack: "", dates: "May 2026", link: "https://example.com", bullets: [bullet] })
+
+  const saved = JSON.parse(JSON.stringify(resumeForSubmission(draft)))
+  const reopened = readResume(saved, draft.id)
+  const prepared = prepareResumePdf(reopened)
+
+  expect(prepared.errors).toEqual({})
+  expect(prepared.content.education[0]).toEqual(draft.education[0])
+  expect(prepared.content.skills?.concepts).toEqual(["Distributed Systems"])
+  expect(prepared.content.experience[0].bullets).toEqual([bullet])
+  expect(prepared.content.projects[0]).toEqual(draft.projects[0])
+})
 
 it("reports a library failure, then loads and filters actual records on retry", async () => {
   let available = false

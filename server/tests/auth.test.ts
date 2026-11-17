@@ -1,5 +1,5 @@
 import request from "supertest";
-import { app, asUser, database, mockSupabase } from "./test-utils";
+import { app, asUser, database, mockCreateSupabaseClient, mockSupabase } from "./test-utils";
 
 const protectedEndpoints = [
   ["get", "/api/applications"], ["get", "/api/applications/a-1"],
@@ -54,6 +54,7 @@ describe("authentication middleware", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ id: "user-b", name: "User B" });
     expect(mockSupabase.auth.getUser).toHaveBeenCalledWith("token-user-b");
+    expect(mockCreateSupabaseClient).toHaveBeenCalledWith("token-user-b");
   });
 
   it("rejects a successful token lookup that has no user", async () => {
@@ -97,7 +98,6 @@ describe("registration", () => {
   });
 
   it.each([
-    [{}, "Email and password required"],
     [{ email: "invalid", password: "short" }, "Invalid credentials"],
     [{ email: "used@example.com", password: "secret123" }, "User already registered"],
   ])("returns the auth provider's registration error for %j", async (body, error) => {
@@ -108,27 +108,40 @@ describe("registration", () => {
     expect(mockSupabase.auth.signUp).toHaveBeenCalledTimes(1);
     expect(mockSupabase.from).not.toHaveBeenCalled();
   });
+
+  it("rejects missing credentials before calling Supabase", async () => {
+    await request(app).post("/api/auth/register").send({}).expect(400);
+    expect(mockSupabase.auth.signUp).not.toHaveBeenCalled();
+  });
 });
 
 describe("login", () => {
-  it("returns the provider's access token for valid credentials", async () => {
+  it("sets a private, HTTP-only cookie without returning a token in the body", async () => {
     const body = { email: "a@example.com", password: "secret123" };
     const response = await request(app).post("/api/auth/login").send(body);
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ accessToken: "token-user-a" });
+    expect(response.status).toBe(204);
+    expect(response.text).toBe("");
+    expect(response.headers["cache-control"]).toBe("private, no-store");
+    expect(response.headers["set-cookie"]).toEqual([
+      expect.stringMatching(/^adaptyn-session=token-user-a; Max-Age=900; Path=\/; Expires=.*; HttpOnly; SameSite=Lax$/),
+    ]);
     expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith(body);
     expect(mockSupabase.auth.getUser).not.toHaveBeenCalled();
   });
 
-  it.each([{}, { email: "a@example.com" }, { email: "a@example.com", password: "wrong" }])(
-    "returns the provider's credential error for %j", async (body) => {
-      mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({ data: { session: null }, error: { message: "Invalid credentials" } });
-      const response = await request(app).post("/api/auth/login").send(body);
-      expect(response.status).toBe(401);
-      expect(response.body).toEqual({ error: "Invalid credentials" });
-      expect(mockSupabase.from).not.toHaveBeenCalled();
-    },
-  );
+  it("returns the provider's credential error", async () => {
+    mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({ data: { session: null }, error: { message: "Invalid credentials" } });
+    const response = await request(app).post("/api/auth/login").send({ email: "a@example.com", password: "wrong" });
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ error: "Invalid credentials" });
+    expect(response.headers["set-cookie"]).toBeUndefined();
+    expect(mockSupabase.from).not.toHaveBeenCalled();
+  });
+
+  it.each([{}, { email: "a@example.com" }])("rejects incomplete credentials for %j", async (body) => {
+    await request(app).post("/api/auth/login").send(body).expect(401);
+    expect(mockSupabase.auth.signInWithPassword).not.toHaveBeenCalled();
+  });
 
   it("returns a fallback when the provider supplies neither a session nor an error", async () => {
     mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({
@@ -137,5 +150,28 @@ describe("login", () => {
     const response = await request(app).post("/api/auth/login").send({ email: "a@example.com", password: "secret123" });
     expect(response.status).toBe(401);
     expect(response.body).toEqual({ error: "Login failed" });
+  });
+});
+
+describe("dashboard session and logout", () => {
+  it("validates the dashboard session before issuing a success response", async () => {
+    await request(app).get("/api/auth/session").set(asUser("forged")).expect(401);
+    await request(app).get("/api/auth/session").set(asUser()).expect(204);
+    expect(mockSupabase.from).not.toHaveBeenCalled();
+  });
+
+  it("clears the browser cookie and signs out the current Supabase session", async () => {
+    const response = await request(app).post("/api/auth/logout").set(asUser()).expect(303);
+    expect(response.headers.location).toBe("/login");
+    expect(response.headers["set-cookie"]).toEqual([
+      expect.stringMatching(/^adaptyn-session=; Path=\/; Expires=Thu, 01 Jan 1970.*; HttpOnly; SameSite=Lax$/),
+    ]);
+    expect(mockSupabase.auth.admin.signOut).toHaveBeenCalledWith("token-user-a", "local");
+  });
+
+  it("blocks cross-origin browser writes before touching the session", async () => {
+    await request(app).post("/api/auth/logout").set(asUser())
+      .set("Origin", "https://untrusted.example").expect(403);
+    expect(mockSupabase.auth.admin.signOut).not.toHaveBeenCalled();
   });
 });

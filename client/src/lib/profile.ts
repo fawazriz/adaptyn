@@ -1,7 +1,7 @@
 // src/lib/api/profiles.ts
 
 export async function fetchProfile() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profiles`, {
+  const res = await fetch("/api/profiles", {
     method: "GET",
     credentials: "include",
     cache: "no-store",

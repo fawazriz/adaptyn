@@ -51,14 +51,14 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 Create `client/.env.local`:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
+API_URL=http://localhost:8000
 ```
 
-Use the same hostname in both local URLs so browser requests can carry the session cookie. Keep local environment files out of Git.
+Next.js proxies browser requests on `/api` to Express at `API_URL`, so the browser receives Express's session cookie on the frontend hostname. The existing `NEXT_PUBLIC_API_URL` also works as a fallback. Set `API_URL` for both the Next.js build and runtime, and set Express's `FRONT_END_URL` to the exact browser-facing origin. Production requires HTTPS for the session cookie. Keep local environment files out of Git.
 
 ### 3. Set up Supabase
 
-In your Supabase project’s SQL Editor, run the files in `server/src/db/migrations` in order from `001` through `004`. They create the profiles, applications, and resumes tables and install the trigger that creates a profile when a user signs up.
+In your Supabase project’s SQL Editor, run the files in `server/src/db/migrations` in order from `001` through `005`. For an existing database already on `004`, apply `005_enable_owner_rls.sql` alongside the updated API so owner-only access and request-scoped database credentials take effect together.
 
 ### 4. Start both servers
 
