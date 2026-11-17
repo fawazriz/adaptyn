@@ -12,8 +12,8 @@ services:
       API_URL: http://server:8000
   server:
     build: 
-      context: ./server
-      dockerfile: dockerfile
+      context: .
+      dockerfile: server/dockerfile
       target: development
     ports:
       - "8000:8000"

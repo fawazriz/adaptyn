@@ -1,0 +1,15 @@
+**
+!server/
+!server/**
+!pdf-service/
+!pdf-service/package.json
+!pdf-service/tsconfig.json
+!pdf-service/src/
+!pdf-service/src/**
+**/node_modules
+**/dist
+**/coverage
+**/.env
+**/.env.*
+**/.git
+server/tmp

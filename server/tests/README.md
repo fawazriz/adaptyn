@@ -6,6 +6,7 @@ Run from `server/`, using the existing installed dependencies:
 npm test
 npm test -- --coverage
 npm test -- --runInBand --detectOpenHandles
+npm run build:generator
 ./node_modules/.bin/tsc --noEmit -p tsconfig.json
 ./node_modules/.bin/tsc -p tests/tsconfig.json
 npm run build
@@ -15,6 +16,9 @@ API tests use Jest and Supertest against the Express app. Supertest opens epheme
 localhost sockets and closes them after requests. The startup test mocks `listen`
 so it never starts a persistent server. Running inside a sandbox requires local
 socket permission. No package installation is needed.
+
+The LaTeX generator's tests live in `pdf-service`. Run `npm ci` and `npm test`
+from that package to test the generator independently.
 
 ## External dependency isolation
 

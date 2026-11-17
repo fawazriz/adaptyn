@@ -89,7 +89,9 @@ Express API
     └── Docker / LaTeX → PDF
 ```
 
-The client calculates dashboard counts from the signed-in user’s application records. Express verifies the session, scopes data requests to that user, and handles PDF compilation.
+The client calculates dashboard counts from the signed-in user’s application records. Express verifies the session, scopes data requests to that user, and handles PDF compilation. It imports the LaTeX generator from the local `pdf-service` package, which the server's dev, build, and test scripts compile automatically.
+
+To build and test the generator on its own, run `npm --prefix pdf-service ci` and `npm --prefix pdf-service test`. Build the Express image from the repository root with `docker build -f server/dockerfile --target production .` so Docker can include both packages.
 
 ## Project Status
 

@@ -58,7 +58,15 @@ jobs:
         with:
           node-version: "24.22.1"
           cache: npm
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: |
+            server/package-lock.json
+            pdf-service/package-lock.json
+
+      - name: Test LaTeX generator
+        working-directory: ./pdf-service
+        run: |
+          npm ci
+          npm test
 
       - name: Install dependencies
         run: npm ci
@@ -116,7 +124,7 @@ jobs:
       - name: Build server image and publish on main
         uses: *build-push
         with:
-          context: ./server
+          context: .
           file: ./server/dockerfile
           target: production
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}

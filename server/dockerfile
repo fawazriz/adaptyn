@@ -2,7 +2,10 @@ FROM node:24.22.1 AS base
 
 WORKDIR /app
 
-COPY . ./
+# Build from the repository root so the local npm dependency is available.
+COPY pdf-service/package.json pdf-service/tsconfig.json /pdf-service/
+COPY pdf-service/src/ /pdf-service/src/
+COPY server/ ./
 
 RUN --mount=type=cache,target=/root/.npm npm ci
 

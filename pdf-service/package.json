@@ -1,0 +1,23 @@
+{
+  "name": "pdf-service",
+  "version": "1.0.0",
+  "description": "Adaptyn resume LaTeX generator",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "pretest": "npm run build",
+    "test": "node --test \"test/*.test.cjs\"",
+    "pretest:integration": "npm run build",
+    "test:integration": "node --test \"test/integration/*.test.cjs\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3"
+  }
+}

@@ -4,10 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
+    "dev": "nodemon --watch src --watch ../pdf-service/src --ext ts --exec \"npm run build:generator && ts-node src/index.ts\"",
+    "build:generator": "tsc -p ../pdf-service/tsconfig.json --typeRoots ./node_modules/@types",
+    "prebuild": "npm run build:generator",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint",
+    "pretest": "npm run build:generator",
     "test": "jest",
     "fix": "eslint --fix"
   },
@@ -21,6 +24,7 @@
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "morgan": "^1.10.1",
+    "pdf-service": "file:../pdf-service",
     "pg": "^8.20.0",
     "uuid": "^14.0.0"
   },
