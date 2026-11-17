@@ -12,6 +12,7 @@ import {
   IconSettings,
   IconChevronLeft,
   IconChevronRight,
+  IconLogout,
 } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
@@ -142,6 +143,21 @@ export function Sidebar({ collapsed, onToggle, dashboardStyle }: Props) {
             </div>
           </div>
         )}
+
+        <form action="/api/auth/logout" method="post">
+          <button
+            type="submit"
+            aria-label="Log out"
+            title={collapsed ? "Log out" : undefined}
+            className={cn(
+              "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full",
+              collapsed && "justify-center px-0"
+            )}
+          >
+            <IconLogout size={14} aria-hidden="true" />
+            {!collapsed && "Log out"}
+          </button>
+        </form>
 
         {/* Collapse toggle */}
         <button

@@ -63,6 +63,9 @@ it("summarizes API records, opens the existing application form, and links to th
   const navigation = within(screen.getByRole("navigation", { name: "Workspace" }))
   expect(navigation.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page")
   expect(navigation.getByRole("link", { name: "Applications" })).toHaveAttribute("href", "/dashboard/applications")
+  const logoutForm = screen.getByRole("button", { name: "Log out" }).closest("form")
+  expect(logoutForm).toHaveAttribute("action", "/api/auth/logout")
+  expect(logoutForm).toHaveAttribute("method", "post")
 })
 
 it("keeps unavailable counts separate from zero and retries a failed request", async () => {

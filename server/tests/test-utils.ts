@@ -19,7 +19,7 @@ type AuthResult = {
   error: ServiceError;
 };
 type LoginResult = {
-  data: { session: { access_token: string } | null };
+  data: { session: { access_token: string; expires_in: number } | null };
   error: ServiceError;
 };
 
@@ -126,27 +126,32 @@ const signUp: (credentials: {
 const signInWithPassword: (credentials: {
   email: string; password: string;
 }) => Promise<LoginResult> = async () => ({
-  data: { session: { access_token: "token-user-a" } }, error: null,
+  data: { session: { access_token: "token-user-a", expires_in: 900 } }, error: null,
 });
+const signOut: (token: string, scope: string) => Promise<{ error: null }> = async () => ({ error: null });
 
 export const mockSupabase = {
   auth: {
     getUser: jest.fn(getUser),
     signUp: jest.fn(signUp),
     signInWithPassword: jest.fn(signInWithPassword),
+    admin: { signOut: jest.fn(signOut) },
   },
   from: jest.fn((table: TableName) => createQuery(table)),
 };
+export const mockCreateSupabaseClient = jest.fn((token?: string) =>
+  token ? { from: mockSupabase.from } : { auth: mockSupabase.auth },
+);
 
 // Mock before importing app: no real Supabase client (or credentials) is loaded.
 jest.doMock("../src/db/supabase-client", () => ({
   __esModule: true,
-  default: mockSupabase,
+  createSupabaseClient: mockCreateSupabaseClient,
 }));
 export const app = require("../src/app").default as Express;
 
 export function asUser(token = "token-user-a") {
-  return { Cookie: `accessToken=${token}` };
+  return { Cookie: `adaptyn-session=${token}` };
 }
 
 beforeEach(() => {
@@ -158,8 +163,12 @@ beforeEach(() => {
   }
   nextId = 1;
   jest.resetAllMocks();
+  mockCreateSupabaseClient.mockImplementation((token) =>
+    token ? { from: mockSupabase.from } : { auth: mockSupabase.auth },
+  );
   mockSupabase.from.mockImplementation((table) => createQuery(table));
   mockSupabase.auth.getUser.mockImplementation(getUser);
   mockSupabase.auth.signUp.mockImplementation(signUp);
   mockSupabase.auth.signInWithPassword.mockImplementation(signInWithPassword);
+  mockSupabase.auth.admin.signOut.mockImplementation(signOut);
 });

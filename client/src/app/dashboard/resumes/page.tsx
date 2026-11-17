@@ -49,7 +49,7 @@ export default function ResumesPage() {
 
   useEffect(() => {
     const controller = new AbortController()
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/applications`, {
+    fetch("/api/applications", {
       credentials: "include",
       cache: "no-store",
       signal: controller.signal,

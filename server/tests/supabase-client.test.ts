@@ -1,5 +1,10 @@
 // Exercise configuration without loading a real SDK client or reading .env files.
-const mockCreateClient = jest.fn(() => ({ marker: "mock-client" }));
+type ClientOptions = {
+  auth: { persistSession: boolean; autoRefreshToken: boolean; detectSessionInUrl: boolean };
+  accessToken?: () => Promise<string>;
+};
+const createClient: (url: string, key: string, options: ClientOptions) => object = () => ({ marker: "mock-client" });
+const mockCreateClient = jest.fn(createClient);
 jest.mock("@supabase/supabase-js", () => ({ createClient: mockCreateClient }));
 jest.mock("dotenv", () => ({ __esModule: true, default: { config: jest.fn() } }));
 
@@ -26,14 +31,20 @@ describe("Supabase client configuration", () => {
     expect(mockCreateClient).not.toHaveBeenCalled();
   });
 
-  it("exports the client created with the configured URL and key", () => {
+  it("creates isolated clients with the configured URL and key", async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "test-key";
-    jest.isolateModules(() => {
-      const client = require("../src/db/supabase-client").default;
-      expect(client).toEqual({ marker: "mock-client" });
+    await jest.isolateModulesAsync(async () => {
+      const { createSupabaseClient } = require("../src/db/supabase-client");
+      const auth = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false };
+      expect(createSupabaseClient()).toEqual({ marker: "mock-client" });
+      expect(mockCreateClient).toHaveBeenLastCalledWith("https://example.supabase.co", "test-key", { auth });
+
+      createSupabaseClient("alice-token");
+      createSupabaseClient("bob-token");
+      const [, aliceCall, bobCall] = mockCreateClient.mock.calls;
+      expect(await aliceCall?.[2].accessToken?.()).toBe("alice-token");
+      expect(await bobCall?.[2].accessToken?.()).toBe("bob-token");
     });
-    expect(mockCreateClient).toHaveBeenCalledWith("https://example.supabase.co", "test-key");
-    expect(mockCreateClient).toHaveBeenCalledTimes(1);
   });
 });

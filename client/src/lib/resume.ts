@@ -13,7 +13,7 @@ export interface ResumeApiRow {
 }
 
 export async function fetchResumes(): Promise<ResumeApiRow[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/resumes`, {
+  const res = await fetch("/api/resumes", {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -28,7 +28,7 @@ export async function fetchResumes(): Promise<ResumeApiRow[]> {
 
 export async function fetchResumeById(id: string): Promise<ResumeApiRow> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/resumes/${encodeURIComponent(id)}`,
+    `/api/resumes/${encodeURIComponent(id)}`,
     {
       method: "GET",
       credentials: "include",
@@ -51,7 +51,7 @@ export async function createResume(params: {
   pdf_url?: string | null
   status?: "draft" | "active" | "archived"
 }): Promise<ResumeApiRow> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/resumes`, {
+  const res = await fetch("/api/resumes", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -89,7 +89,7 @@ export function resumePath(id: string) {
 }
 
 function resumeApiPath(id: string) {
-  return `${process.env.NEXT_PUBLIC_API_URL}/api/resumes/${encodeURIComponent(id)}`
+  return `/api/resumes/${encodeURIComponent(id)}`
 }
 
 export async function updateResume(

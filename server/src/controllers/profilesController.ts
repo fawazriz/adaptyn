@@ -1,14 +1,9 @@
-import supabase from "../db/supabase-client";
 import { Request, Response } from "express";
-// import { User } from "@supabase/auth-js/dist/module/lib/types";
-import type { User } from "@supabase/supabase-js";
-
-interface AuthenticatedRequest extends Request {
-    user: User;
-}
+import type { AuthenticatedRequest } from "../middleware/auth";
 
 export async function getMyProfile(req: Request, res: Response) {
-    const id = (req as AuthenticatedRequest).user.id;
+    const { supabase, user } = req as AuthenticatedRequest;
+    const id = user.id;
 
     const { data, error } = await supabase
         .from("profiles")
@@ -24,7 +19,8 @@ export async function getMyProfile(req: Request, res: Response) {
 }
 
 export async function updateMyProfile(req: Request, res: Response) {
-    const id = (req as AuthenticatedRequest).user.id;
+    const { supabase, user } = req as AuthenticatedRequest;
+    const id = user.id;
     const { name, headline, location, bio } = req.body;
 
     const updates: Record<string, unknown> = {};
@@ -52,7 +48,8 @@ export async function updateMyProfile(req: Request, res: Response) {
 }
 
 export async function deleteMyProfile(req: Request, res: Response) {
-    const id = (req as AuthenticatedRequest).user.id;
+    const { supabase, user } = req as AuthenticatedRequest;
+    const id = user.id;
 
     const { data, error } = await supabase
         .from("profiles")

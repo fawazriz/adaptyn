@@ -1,17 +1,13 @@
 
 import { Request, Response } from "express";
-import supabase from "../db/supabase-client";
-import type { User } from "@supabase/supabase-js";
-
-interface AuthenticatedRequest extends Request {
-    user: User;
-}
+import type { AuthenticatedRequest } from "../middleware/auth";
 
 export async function getAllResumes(req: Request, res: Response) {
+    const { supabase, user } = req as AuthenticatedRequest;
     const { data, error } = await supabase
         .from("resumes")
         .select("*")
-        .eq("user_id", (req as AuthenticatedRequest).user.id);
+        .eq("user_id", user.id);
 
     if (error) {
         return res.status(500).json({ error: error.message });
@@ -21,13 +17,14 @@ export async function getAllResumes(req: Request, res: Response) {
 }
 
 export async function getResumeById(req: Request, res: Response) {
+    const { supabase, user } = req as AuthenticatedRequest;
     const { id } = req.params;
 
     const { data, error } = await supabase
         .from("resumes")
         .select("*")
         .eq("id", id)
-        .eq("user_id", (req as AuthenticatedRequest).user.id)
+        .eq("user_id", user.id)
         .single();
 
     if (error) {
@@ -38,6 +35,7 @@ export async function getResumeById(req: Request, res: Response) {
 }
 
 export async function createResume(req: Request, res: Response) {
+    const { supabase, user } = req as AuthenticatedRequest;
     const {
         name,
         target_role,
@@ -54,7 +52,7 @@ export async function createResume(req: Request, res: Response) {
     }
 
     const resume = {
-        user_id: (req as AuthenticatedRequest).user.id,
+        user_id: user.id,
         name,
         target_role,
         content,
@@ -77,6 +75,7 @@ export async function createResume(req: Request, res: Response) {
 }
 
 export async function updateResume(req: Request, res: Response) {
+    const { supabase, user } = req as AuthenticatedRequest;
     const { id } = req.params;
     const {
         name,
@@ -100,7 +99,7 @@ export async function updateResume(req: Request, res: Response) {
         .from("resumes")
         .update(updates)
         .eq("id", id)
-        .eq("user_id", (req as AuthenticatedRequest).user.id)
+        .eq("user_id", user.id)
         .select("*")
         .maybeSingle();
 
@@ -117,9 +116,10 @@ export async function updateResume(req: Request, res: Response) {
 }
 
 export async function deleteResume(req: Request, res: Response) {
+    const { supabase, user } = req as AuthenticatedRequest;
     const { id } = req.params;
 
-    const { error } = await supabase.from("resumes").delete().eq("id", id).eq("user_id", (req as AuthenticatedRequest).user.id);
+    const { error } = await supabase.from("resumes").delete().eq("id", id).eq("user_id", user.id);
 
     if (error) {
         return res.status(400).json({ error: error.message });
@@ -137,8 +137,9 @@ import path from "path"
 /* istanbul ignore next */
 export async function compileResume(req: Request, res: Response) {
     try {
+        const { supabase, user } = req as AuthenticatedRequest;
         const { id } = req.params;
-        const userId = (req as AuthenticatedRequest).user.id;
+        const userId = user.id;
 
         const { data: resume, error } = await supabase
             .from("resumes")

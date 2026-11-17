@@ -9,6 +9,11 @@ const supabaseKey: string | null = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_
 if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables');
 }
-const supabase = createClient(supabaseUrl, supabaseKey);
+const config = { url: supabaseUrl, key: supabaseKey };
 
-export default supabase;
+export function createSupabaseClient(token?: string) {
+  return createClient(config.url, config.key, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    ...(token ? { accessToken: async () => token } : {}),
+  });
+}
